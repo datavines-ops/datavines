@@ -28,6 +28,8 @@ public class OracleDialect extends JdbcDialect{
         super.getDialectKeyMap();
         dialectKeyMap.put(STRING_TYPE, "VARCHAR2");
         dialectKeyMap.put(LIMIT_TOP_50_KEY, " rownum <= 50");
+        dialectKeyMap.put(REGEX_KEY, "regexp_like(${column},'${regexp}')");
+        dialectKeyMap.put(NOT_REGEX_KEY, "not regexp_like(${column},'${regexp}')");
         dialectKeyMap.put(IF_CASE_KEY, "case when ${column} is null then 'NULL' else ${column}||'' end ");
         return dialectKeyMap;
     }
