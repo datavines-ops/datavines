@@ -47,6 +47,11 @@ public class OracleConnector extends JdbcConnector{
     }
 
     @Override
+    protected ResultSet getPrimaryKeys(DatabaseMetaData metaData, String catalog, String schema, String tableName) throws SQLException {
+        return metaData.getPrimaryKeys(null, schema.toUpperCase(), tableName);
+    }
+
+    @Override
     public ResultSet getMetadataDatabases(Connection connection) throws SQLException {
         java.sql.Statement stmt = connection.createStatement();
         return stmt.executeQuery("select NAME AS Database FROM V$database");
