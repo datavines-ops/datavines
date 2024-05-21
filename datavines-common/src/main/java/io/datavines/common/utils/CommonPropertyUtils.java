@@ -86,6 +86,9 @@ public class CommonPropertyUtils {
     public static final String FILE_MAX_LENGTH = "file.max.length";
     public static final Long FILE_MAX_LENGTH_DEFAULT = 10 * 1024 * 1024L;
 
+    public static final String DATAVINES_FQDN = "datavines.fqdn";
+    public static final String DATAVINES_FQDN_DEFAULT = "http://127.0.0.1:5600";
+
     private static final Logger logger = LoggerFactory.getLogger(CommonPropertyUtils.class);
 
     public static final String COMMON_PROPERTIES_PATH = "/common.properties";
