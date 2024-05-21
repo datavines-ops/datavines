@@ -128,10 +128,9 @@ public class JobResultValidator {
             String jobName;
             String dataSourceName = null;
             String dataSourceType = null;
-            String fqdn;
+            String fqdn= "";
             if (jobId == -1L) {
                 jobName = jobExecution.getName();
-                fqdn = CommonPropertyUtils.getString(CommonPropertyUtils.DATAVINES_FQDN)+"/#/main/home";
             } else {
                 JobService jobService = jobExternalService.getJobService();
                 Job job = jobService.getById(jobId);
@@ -140,7 +139,9 @@ public class JobResultValidator {
                 DataSource dataSource = jobExternalService.getDataSourceService().getDataSourceById(dataSourceId);
                 dataSourceName = dataSource.getName();
                 dataSourceType = dataSource.getType();
-                fqdn = CommonPropertyUtils.getString(CommonPropertyUtils.DATAVINES_FQDN) + String.format("/#/main/detail/%s/jobs/instance?jobId=%s", dataSourceId, jobId);
+                if (!CommonPropertyUtils.getString(CommonPropertyUtils.DATAVINES_FQDN).equals(CommonPropertyUtils.DATAVINES_FQDN_DEFAULT)) {
+                    fqdn = CommonPropertyUtils.getString(CommonPropertyUtils.DATAVINES_FQDN) + String.format("/#/main/detail/%s/jobs/instance?jobId=%s", dataSourceId, jobId);
+                }
             }
 
             List<JobExecutionResult> errorJobExecutionResultList = jobExternalService.listErrorJobExecutionResultByJobExecutionId(jobExecution.getId());
