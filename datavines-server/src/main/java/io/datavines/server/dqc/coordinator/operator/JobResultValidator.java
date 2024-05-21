@@ -18,6 +18,7 @@ package io.datavines.server.dqc.coordinator.operator;
 
 import io.datavines.common.entity.JobExecutionRequest;
 import io.datavines.common.enums.OperatorType;
+import io.datavines.common.utils.CommonPropertyUtils;
 import io.datavines.common.utils.JSONUtils;
 import io.datavines.common.utils.ParameterUtils;
 import io.datavines.common.utils.StringUtils;
@@ -61,7 +62,7 @@ public class JobResultValidator {
 
     @Autowired
     private IssueService issueService;
-    
+
     /**
      * When the task type is data quality, it will get the statistics value、comparison value、
      * threshold、check type、operator and failure strategy，use the formula that
@@ -127,6 +128,7 @@ public class JobResultValidator {
             String jobName;
             String dataSourceName = null;
             String dataSourceType = null;
+            String fqdn;
             if (jobId == -1L) {
                 jobName = jobExecution.getName();
             } else {
@@ -137,6 +139,7 @@ public class JobResultValidator {
                 DataSource dataSource = jobExternalService.getDataSourceService().getDataSourceById(dataSourceId);
                 dataSourceName = dataSource.getName();
                 dataSourceType = dataSource.getType();
+                fqdn = CommonPropertyUtils.getString(CommonPropertyUtils.DATAVINES_FQDN) + String.format("/#/main/detail/%s/jobs/instance?jobId=%s", dataSourceId, jobId);
             }
 
             List<JobExecutionResult> errorJobExecutionResultList = jobExternalService.listErrorJobExecutionResultByJobExecutionId(jobExecution.getId());
@@ -154,7 +157,7 @@ public class JobResultValidator {
                     messages.add(String.format((isEn ? "Datasource : %s [%s] : ": "数据源 : %s [%s]: ") ,dataSourceType.toUpperCase(), dataSourceName));
                 }
                 String title = buildAlertSubject(metricExecutionResult, isEn);
-                String content = buildAlertMessage(messages, metricExecutionResult, jobExecution.getEngineType(), isEn);
+                String content = buildAlertMessage(messages, metricExecutionResult,fqdn, jobExecution.getEngineType(), isEn);
                 message.setSubject(title);
                 message.setMessage(content);
                 saveIssue(jobId, title, content);
@@ -170,7 +173,7 @@ public class JobResultValidator {
         }
     }
 
-    private String buildAlertMessage(List<String> messages, MetricExecutionResult metricExecutionResult, String engineType, boolean isEn) {
+    private String buildAlertMessage(List<String> messages, MetricExecutionResult metricExecutionResult,String fqdn, String engineType, boolean isEn) {
         Map<String,String> parameters = new HashMap<>();
         parameters.put("actual_value", String.valueOf(metricExecutionResult.getActualValue()));
         parameters.put("expected_value", String.valueOf(metricExecutionResult.getExpectedValue()));
@@ -192,6 +195,10 @@ public class JobResultValidator {
         messages.add((isEn ? "Result Formula" : "检查公式") + " : " + ParameterUtils.convertParameterPlaceholders(resultFormulaFormat, parameters));
 
         messages.add(isEn ? "Check Result : Failure" : "检查结果 : 异常" );
+
+        if (StringUtils.isNotEmpty(fqdn)){
+            messages.add((isEn ? "Task Execution Record":"任务执行记录") + " : " + fqdn);
+        }
 
         return JSONUtils.toJsonString(messages);
     }
