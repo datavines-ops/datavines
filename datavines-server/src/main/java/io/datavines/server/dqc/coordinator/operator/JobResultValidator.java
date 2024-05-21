@@ -131,6 +131,7 @@ public class JobResultValidator {
             String fqdn;
             if (jobId == -1L) {
                 jobName = jobExecution.getName();
+                fqdn = CommonPropertyUtils.getString(CommonPropertyUtils.DATAVINES_FQDN)+"/#/main/home";
             } else {
                 JobService jobService = jobExternalService.getJobService();
                 Job job = jobService.getById(jobId);
