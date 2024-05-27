@@ -109,7 +109,8 @@
     </sql>
 
     <select id="getJobExecutionPage" resultType="io.datavines.server.api.dto.vo.JobExecutionVO">
-        select p.id, p.name, p.schema_name, p.table_name, p.column_name, p.metric_type, p.job_type, p.status, r.state as checkState, p.start_time, p.end_time, p.update_time from (<include refid="basic_sql"/>) p left join dv_job_execution_result r on p.id = r.job_execution_id
+        select p.id, p.name, p.schema_name, p.table_name, p.column_name, p.metric_type, p.job_type, p.status, p.start_time, p.end_time, p.update_time
+        from (<include refid="basic_sql"/>) p
         <where>
             <if test="searchVal != null">
                 LOWER(p.`name`) LIKE CONCAT(CONCAT('%', LOWER(#{searchVal})), '%')
