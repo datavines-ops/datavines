@@ -70,7 +70,7 @@ $ mvn clean package -Prelease -DskipTests
 
 平台以插件化设计为核心，以下模块都支持用户`自定义插件`进行扩展
 
-- **数据源**：已支持 `MySQL`、`Impala`、`Starocks`、`Doris`、`Presto`、`Trino`、`ClickHouse`、`PostgreSQL`
+- **数据源**：已支持 `MySQL`、`Impala`、`StarRocks`、`Doris`、`Presto`、`Trino`、`ClickHouse`、`PostgreSQL`
 - **检查规则**：内置空值检查、非空检查、枚举检查等27个检查规则
 - **作业执行引擎**：已支持`Spark`和`Local`两种执行引擎。`Spark `引擎目前仅支持`Spark2.4`版本，`Local` 引擎则是基于`JDBC`开发的本地执行引擎，无需依赖其他执行引擎。
 - **告警通道**：已支持**邮件**

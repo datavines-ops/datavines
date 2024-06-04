@@ -68,7 +68,7 @@ $ mvn clean package -Prelease -DskipTests
 
 The platform is based on plug-in design, and the following modules support user-defined plug-ins to expand
 
-- **Data Source**: `MySQL`, `Impala`, `Starocks`, `Doris`, `Presto`, `Trino`, `ClickHouse`, `PostgreSQL` are already supported
+- **Data Source**: `MySQL`, `Impala`, `StarRocks`, `Doris`, `Presto`, `Trino`, `ClickHouse`, `PostgreSQL` are already supported
 - **Check Rules**: 27 check rules such as built-in null value check, non-null check, enumeration check, etc.
 - **Job Execution Engine**: Two execution engines `Spark` and `Local` have been supported. The `Spark` engine currently only supports the `Spark2.4` version, and the `Local` engine is a local execution engine developed based on `JDBC`, without relying on other execution engines.
 - **Alert Channel**: Supported **Email**
