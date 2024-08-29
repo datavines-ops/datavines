@@ -91,7 +91,13 @@ public class WecomBotSender {
         if (StringUtils.isNotEmpty(content)) {
             ArrayNode list = JSONUtils.parseArray(content);
             for (JsonNode jsonNode : list) {
-                contents.append(WecomBotConstants.QUOTE_START).append(jsonNode.toString().replace("\"", "")).append(WecomBotConstants.END);
+                String nodeMessage = jsonNode.toString().replace("\"", "");
+                if (nodeMessage.startsWith("Task Execution Record")||nodeMessage.startsWith("任务执行记录")){
+                    String formatMessage = String.format("%s : [%s](%s)", nodeMessage.substring(0,nodeMessage.indexOf(" : ")),nodeMessage.substring(nodeMessage.indexOf(":")+2),nodeMessage.substring(nodeMessage.indexOf(":")+2));
+                    contents.append(WecomBotConstants.QUOTE_START).append(formatMessage).append(WecomBotConstants.END);
+                }else {
+                    contents.append(WecomBotConstants.QUOTE_START).append(nodeMessage).append(WecomBotConstants.END);
+                }
             }
         }
         return contents.toString();
