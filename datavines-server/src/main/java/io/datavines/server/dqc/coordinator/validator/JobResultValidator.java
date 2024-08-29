@@ -43,6 +43,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static io.datavines.common.ConfigConstants.FIX_VALUE;
@@ -142,7 +143,7 @@ public class JobResultValidator {
                 dataSourceName = dataSource.getName();
                 dataSourceType = dataSource.getType();
                 if (!CommonPropertyUtils.DATAVINES_FQDN_DEFAULT.equals(CommonPropertyUtils.getString(CommonPropertyUtils.DATAVINES_FQDN))) {
-                    fqdn = CommonPropertyUtils.getString(CommonPropertyUtils.DATAVINES_FQDN) + String.format("/#/main/detail/%s/jobs/instance?jobId=%s", dataSourceId, jobId);
+                    fqdn = CommonPropertyUtils.getString(CommonPropertyUtils.DATAVINES_FQDN) + String.format("/#/history?%s", Base64.getEncoder().encodeToString(String.format("jobId=%s&ds=%s",jobId,dataSourceName).getBytes(StandardCharsets.UTF_8)));
                 }
             }
 

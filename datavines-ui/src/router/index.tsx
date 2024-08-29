@@ -16,6 +16,10 @@ export const routerNoLogin: TRouterItem[] = [
         path: '/forgetPwd',
         component: lazy(() => import(/* webpackChunkName: 'view-forgetPwd' */ '@/view/ForgetPassword')),
     },
+    {
+        path: '/history',
+        component: lazy(()=>import('@/view/JobHistory/Instance'))
+    }
 ];
 
 export {
