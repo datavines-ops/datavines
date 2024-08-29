@@ -73,4 +73,6 @@ public class EmailConstants {
     public static final String EXCEL_SUFFIX_XLSX = ".xlsx";
 
     public static final String SINGLE_SLASH = "/";
+
+    public static final String URL="<a href=\"mailto:";
 }
