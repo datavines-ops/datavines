@@ -16,7 +16,7 @@
 # limitations under the License.
 #
 
-usage="Usage: datavines-daemon.sh (start|start_container|stop) <''|mysql>"
+usage="Usage: datavines-daemon.sh (start|start_container|start_with_jmx|stop|restart_with_jmx|status) <''|mysql>"
 
 # if no args specified, show usage
 if [ $# -le 0 ]; then
@@ -71,18 +71,21 @@ cd $DATAVINES_HOME
 LOG_FILE="-Dlogging.config=classpath:server-logback.xml $springProfileActive"
 CLASS=io.datavines.server.DataVinesServer
 
+# JMX path
+JMX="-javaagent:$DATAVINES_HOME/libs/jmx_prometheus_javaagent-0.20.0.jar=10010:$DATAVINES_CONF_DIR/jmx/jmx_exporter_config.yaml"
+
 case $startStop in
   (start)
     [ -w "$DATAVINES_PID_DIR" ] ||  mkdir -p "$DATAVINES_PID_DIR"
 
     if [ -f $pid ]; then
       if kill -0 `cat $pid` > /dev/null 2>&1; then
-        echo DataVinesServer running as process `cat $pid`.  Stop it first.
+        echo "DataVinesServer running as process `cat $pid`. Stop it first."
         exit 1
       fi
     fi
 
-    echo starting DataVinesServer, logging to $log
+    echo "Starting DataVinesServer, logging to $log ..."
 
     exec_command="$LOG_FILE $DATAVINES_OPTS -classpath $DATAVINES_CONF_DIR:$DATAVINES_LIB_JARS $CLASS"
 
@@ -96,12 +99,12 @@ case $startStop in
 
     if [ -f $pid ]; then
       if kill -0 `cat $pid` > /dev/null 2>&1; then
-        echo DataVinesServer running as process `cat $pid`.  Stop it first.
+        echo "DataVinesServer running as process `cat $pid`. Stop it first."
         exit 1
       fi
     fi
 
-    echo starting DataVinesServer, logging to $log
+    echo "Starting DataVinesServer, logging to $log ..."
 
     exec_command="$LOG_FILE $DATAVINES_OPTS -classpath $DATAVINES_CONF_DIR:$DATAVINES_LIB_JARS $CLASS"
 
@@ -110,12 +113,30 @@ case $startStop in
     echo $! > $pid
     ;;
 
-  (stop)
+  (start_with_jmx)
+    [ -w "$DATAVINES_PID_DIR" ] ||  mkdir -p "$DATAVINES_PID_DIR"
 
+    if [ -f $pid ]; then
+      if kill -0 `cat $pid` > /dev/null 2>&1; then
+        echo "DataVinesServer running as process `cat $pid`. Stop it first."
+        exit 1
+      fi
+    fi
+
+    echo "Starting DataVinesServer, logging to $log ..."
+
+    exec_command="$LOG_FILE $DATAVINES_OPTS ${JMX} -classpath $DATAVINES_CONF_DIR:$DATAVINES_LIB_JARS $CLASS"
+
+    echo "nohup $JAVA_HOME/bin/java $exec_command > $log 2>&1 &"
+    nohup $JAVA_HOME/bin/java $exec_command > $log 2>&1 &
+    echo $! > $pid
+    ;;
+
+  (stop)
       if [ -f $pid ]; then
         TARGET_PID=`cat $pid`
         if kill -0 $TARGET_PID > /dev/null 2>&1; then
-          echo stopping DataVinesServer
+          echo "Stopping DataVinesServer..."
           kill $TARGET_PID
           sleep $STOP_TIMEOUT
           if kill -0 $TARGET_PID > /dev/null 2>&1; then
@@ -123,13 +144,33 @@ case $startStop in
             kill -9 $TARGET_PID
           fi
         else
-          echo no DataVinesServer to stop
+          echo "No DataVinesServer to stop."
         fi
         rm -f $pid
       else
-        echo no DataVinesServer to stop
+        echo "No DataVinesServer to stop."
       fi
       ;;
+
+  (status)
+    if [ -f $pid ]; then
+      echo ""
+      echo "Service DataVinesServer is running. It's pid=${pid}"
+      echo ""
+    else
+      echo ""
+      echo "Service DataVinesServer is not running!"
+      echo ""
+      exit 1
+    fi
+    ;;
+
+  (restart_with_jmx)
+    echo ""
+    stop
+    start_with_jmx
+    echo "........................................Restart with Jmx Successfully........................................"
+    ;;
 
   (*)
     echo $usage
