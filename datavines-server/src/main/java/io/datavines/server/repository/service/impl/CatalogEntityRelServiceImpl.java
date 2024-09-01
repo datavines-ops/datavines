@@ -227,7 +227,7 @@ public class CatalogEntityRelServiceImpl extends ServiceImpl<CatalogEntityRelMap
     public CatalogEntityLineageVO getLineageByFqn(Long datasourceId, String fqn, int upstreamDepth, int downstreamDepth) {
         CatalogEntityInstance catalogEntityInstance = catalogEntityInstanceService.getByDataSourceAndFQN(datasourceId, fqn);
         if (catalogEntityInstance == null) {
-            throw new DataVinesServerException(Status.CATALOG_PROFILE_INSTANCE_IS_NULL_ERROR,fqn);
+            throw new DataVinesServerException(Status.CATALOG_INSTANCE_IS_NULL_ERROR,fqn);
         }
 
         return getCatalogEntityLineageVO(catalogEntityInstance);
@@ -241,14 +241,15 @@ public class CatalogEntityRelServiceImpl extends ServiceImpl<CatalogEntityRelMap
         CatalogEntityLineageVO catalogEntityLineageVO = new CatalogEntityLineageVO();
         CatalogEntityInstanceInfo currentEntityInstanceInfo = new CatalogEntityInstanceInfo();
         BeanUtils.copyProperties(catalogEntityInstance, currentEntityInstanceInfo);
-        String fromUUID = catalogEntityInstance.getUuid();
+        String fromUuid = catalogEntityInstance.getUuid();
 
         LineageEntityNodeInfo currentNode = new LineageEntityNodeInfo();
         BeanUtils.copyProperties(catalogEntityInstance, currentNode);
-        CatalogEntityInstance databaseEntity = catalogEntityInstanceService.getParent(fromUUID);
+        CatalogEntityInstance databaseEntity = catalogEntityInstanceService.getParent(fromUuid);
         CatalogEntityInstanceInfo databaseEntityInstanceInfo = new CatalogEntityInstanceInfo();
         BeanUtils.copyProperties(databaseEntity, databaseEntityInstanceInfo);
         currentNode.setDatabase(databaseEntityInstanceInfo);
+
         DataSource dataSource = dataSourceService.getById(catalogEntityInstance.getDatasourceId());
         CatalogEntityInstanceInfo datasourceEntityInstanceInfo = new CatalogEntityInstanceInfo();
         datasourceEntityInstanceInfo.setType(dataSource.getType());
@@ -266,6 +267,7 @@ public class CatalogEntityRelServiceImpl extends ServiceImpl<CatalogEntityRelMap
             currentNode.setColumns(columns);
         }
         currentNode.setDatasource(datasourceEntityInstanceInfo);
+
         catalogEntityLineageVO.setCurrentNode(currentNode);
 
         List<LineageEntityNodeInfo> nodes = new ArrayList<>();
@@ -274,7 +276,7 @@ public class CatalogEntityRelServiceImpl extends ServiceImpl<CatalogEntityRelMap
         List<LineageEntityEdgeInfo> edges = new ArrayList<>();
 
         List<CatalogEntityRel> downstreamRelList = list(new LambdaQueryWrapper<CatalogEntityRel>()
-                .eq(CatalogEntityRel::getEntity1Uuid, fromUUID)
+                .eq(CatalogEntityRel::getEntity1Uuid, fromUuid)
                 .eq(CatalogEntityRel::getType, EntityRelType.DOWNSTREAM.getDescription()));
         if (CollectionUtils.isNotEmpty(downstreamRelList)) {
             for (CatalogEntityRel rel : downstreamRelList) {
@@ -282,10 +284,12 @@ public class CatalogEntityRelServiceImpl extends ServiceImpl<CatalogEntityRelMap
                 if (downstreamEntityInstance != null && !nodeSet.contains(downstreamEntityInstance.getUuid())) {
                     LineageEntityNodeInfo downstreamNode = new LineageEntityNodeInfo();
                     BeanUtils.copyProperties(downstreamEntityInstance, downstreamNode);
-                    CatalogEntityInstance toDatabaseEntity = catalogEntityInstanceService.getParent(fromUUID);
+
+                    CatalogEntityInstance toDatabaseEntity = catalogEntityInstanceService.getParent(fromUuid);
                     CatalogEntityInstanceInfo toDatabaseEntityInstanceInfo = new CatalogEntityInstanceInfo();
                     BeanUtils.copyProperties(toDatabaseEntity, toDatabaseEntityInstanceInfo);
-                    downstreamNode.setDatabase(databaseEntityInstanceInfo);
+                    downstreamNode.setDatabase(toDatabaseEntityInstanceInfo);
+
                     DataSource toDataSource = dataSourceService.getById(catalogEntityInstance.getDatasourceId());
                     CatalogEntityInstanceInfo toDatasourceEntityInstanceInfo = new CatalogEntityInstanceInfo();
                     toDatasourceEntityInstanceInfo.setType(toDataSource.getType());
@@ -293,6 +297,7 @@ public class CatalogEntityRelServiceImpl extends ServiceImpl<CatalogEntityRelMap
                     toDatasourceEntityInstanceInfo.setUuid(toDataSource.getUuid());
                     toDatasourceEntityInstanceInfo.setId(toDataSource.getId());
                     downstreamNode.setDatasource(toDatasourceEntityInstanceInfo);
+
                     List<CatalogEntityInstance> childEntityInstances = catalogEntityInstanceService.getChildren(downstreamEntityInstance.getUuid());
                     if (CollectionUtils.isNotEmpty(childEntityInstances)) {
                         List<CatalogEntityInstanceInfo> columns = new ArrayList<>();
@@ -302,6 +307,13 @@ public class CatalogEntityRelServiceImpl extends ServiceImpl<CatalogEntityRelMap
                             columns.add(columnEntityInstanceInfo);
                         }
                         downstreamNode.setColumns(columns);
+                    }
+
+                    List<CatalogEntityRel> downstreamRelList2 = list(new LambdaQueryWrapper<CatalogEntityRel>()
+                            .eq(CatalogEntityRel::getEntity1Uuid, downstreamNode.getUuid())
+                            .eq(CatalogEntityRel::getType, EntityRelType.DOWNSTREAM.getDescription()));
+                    if (CollectionUtils.isNotEmpty(downstreamRelList2)) {
+                        downstreamNode.setHasNextNode(true);
                     }
 
                     nodes.add(downstreamNode);
@@ -360,7 +372,7 @@ public class CatalogEntityRelServiceImpl extends ServiceImpl<CatalogEntityRelMap
         }
 
         List<CatalogEntityRel> upstreamRelList = list(new LambdaQueryWrapper<CatalogEntityRel>()
-                .eq(CatalogEntityRel::getEntity2Uuid, fromUUID)
+                .eq(CatalogEntityRel::getEntity2Uuid, fromUuid)
                 .eq(CatalogEntityRel::getType, EntityRelType.DOWNSTREAM.getDescription()));
         if (CollectionUtils.isNotEmpty(upstreamRelList)) {
             for (CatalogEntityRel rel : upstreamRelList) {
@@ -368,10 +380,12 @@ public class CatalogEntityRelServiceImpl extends ServiceImpl<CatalogEntityRelMap
                 if (upstreamEntityInstance != null && !nodeSet.contains(upstreamEntityInstance.getUuid())) {
                     LineageEntityNodeInfo upstreamNode = new LineageEntityNodeInfo();
                     BeanUtils.copyProperties(upstreamEntityInstance, upstreamNode);
-                    CatalogEntityInstance fromDatabaseEntity = catalogEntityInstanceService.getParent(fromUUID);
+
+                    CatalogEntityInstance fromDatabaseEntity = catalogEntityInstanceService.getParent(fromUuid);
                     CatalogEntityInstanceInfo fromDatabaseEntityInstanceInfo = new CatalogEntityInstanceInfo();
                     BeanUtils.copyProperties(fromDatabaseEntity, fromDatabaseEntityInstanceInfo);
-                    upstreamNode.setDatabase(databaseEntityInstanceInfo);
+                    upstreamNode.setDatabase(fromDatabaseEntityInstanceInfo);
+
                     DataSource fromDataSource = dataSourceService.getById(catalogEntityInstance.getDatasourceId());
                     CatalogEntityInstanceInfo fromDatasourceEntityInstanceInfo = new CatalogEntityInstanceInfo();
                     fromDatasourceEntityInstanceInfo.setType(fromDataSource.getType());
@@ -379,6 +393,7 @@ public class CatalogEntityRelServiceImpl extends ServiceImpl<CatalogEntityRelMap
                     fromDatasourceEntityInstanceInfo.setUuid(fromDataSource.getUuid());
                     fromDatasourceEntityInstanceInfo.setId(fromDataSource.getId());
                     upstreamNode.setDatasource(fromDatasourceEntityInstanceInfo);
+
                     List<CatalogEntityInstance> childEntityInstances = catalogEntityInstanceService.getChildren(upstreamEntityInstance.getUuid());
                     if (CollectionUtils.isNotEmpty(childEntityInstances)) {
                         List<CatalogEntityInstanceInfo> columns = new ArrayList<>();
@@ -388,6 +403,13 @@ public class CatalogEntityRelServiceImpl extends ServiceImpl<CatalogEntityRelMap
                             columns.add(columnEntityInstanceInfo);
                         }
                         upstreamNode.setColumns(columns);
+                    }
+
+                    List<CatalogEntityRel> upstreamRelList2 = list(new LambdaQueryWrapper<CatalogEntityRel>()
+                            .eq(CatalogEntityRel::getEntity2Uuid, upstreamNode.getUuid())
+                            .eq(CatalogEntityRel::getType, EntityRelType.DOWNSTREAM.getDescription()));
+                    if (CollectionUtils.isNotEmpty(upstreamRelList2)) {
+                        upstreamNode.setHasNextNode(true);
                     }
                     nodes.add(upstreamNode);
                     nodeSet.add(upstreamEntityInstance.getUuid());
@@ -454,7 +476,7 @@ public class CatalogEntityRelServiceImpl extends ServiceImpl<CatalogEntityRelMap
     public CatalogEntityLineageVO getLineageByUUID(String uuid, int upstreamDepth, int downstreamDepth) {
         CatalogEntityInstance catalogEntityInstance = catalogEntityInstanceService.getByUUID(uuid);
         if (catalogEntityInstance == null) {
-            throw new DataVinesServerException(Status.CATALOG_PROFILE_INSTANCE_IS_NULL_ERROR, uuid);
+            throw new DataVinesServerException(Status.CATALOG_INSTANCE_IS_NULL_ERROR, uuid);
         }
 
         return getCatalogEntityLineageVO(catalogEntityInstance);

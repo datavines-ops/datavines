@@ -17,15 +17,12 @@
 package io.datavines.server.repository.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import io.datavines.common.entity.job.BaseJobParameter;
 import io.datavines.common.enums.OperatorType;
 import io.datavines.common.exception.DataVinesException;
 import io.datavines.common.utils.DateUtils;
-import io.datavines.common.utils.JSONUtils;
 import io.datavines.common.utils.ParameterUtils;
 import io.datavines.common.utils.StringUtils;
 import io.datavines.core.utils.LanguageUtils;
@@ -46,6 +43,7 @@ import org.apache.commons.collections4.MapUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -74,6 +72,7 @@ public class JobQualityReportServiceImpl extends ServiceImpl<JobQualityReportMap
     @Autowired
     private JobExecutionService jobExecutionService;
 
+    @Transactional(rollbackFor =  Exception.class)
     @Override
     public boolean generateQualityReport(Long datasourceId) {
         String yesterday = DateUtils.format(DateUtils.addDays(DateUtils.getCurrentDate(),-1),DateUtils.YYYY_MM_DD);
@@ -181,28 +180,39 @@ public class JobQualityReportServiceImpl extends ServiceImpl<JobQualityReportMap
                 }
 
                 if (CollectionUtils.isNotEmpty(relList)) {
-                    jobExecutionResultReportRelService.remove(new QueryWrapper<JobExecutionResultReportRel>().eq("quality_report_id",qualityReportId));
+                    jobExecutionResultReportRelService.remove(new LambdaQueryWrapper<JobExecutionResultReportRel>()
+                            .eq(JobExecutionResultReportRel::getQualityReportId,qualityReportId));
                     jobExecutionResultReportRelService.saveBatch(relList);
                 }
             }
         }
 
         // 删除datasource_id 下所有表级别的评分
-        jobQualityReportMapper.delete(new QueryWrapper<JobQualityReport>().eq("entity_level","table").eq("datasource_id",datasourceId));
+        jobQualityReportMapper.delete(new LambdaQueryWrapper<JobQualityReport>()
+                .eq(JobQualityReport::getEntityLevel, TABLE)
+                .eq(JobQualityReport::getDatasourceId, datasourceId)
+                .eq(JobQualityReport::getReportDate, yesterday));
         // 根据datasource_id,database_name,table_name 进行group by,计算得到表的分数
         List<JobQualityReport> tableScoreList = jobQualityReportMapper.listTableScoreGroupByDatasource(datasourceId, yesterday);
         if (CollectionUtils.isNotEmpty(tableScoreList)) {
             saveBatch(tableScoreList);
         }
 
-        jobQualityReportMapper.delete(new QueryWrapper<JobQualityReport>().eq("entity_level","database").eq("datasource_id",datasourceId));
+        jobQualityReportMapper.delete(new LambdaQueryWrapper<JobQualityReport>()
+                .eq(JobQualityReport::getEntityLevel, DATABASE)
+                .eq(JobQualityReport::getDatasourceId, datasourceId)
+                .eq(JobQualityReport::getReportDate, yesterday));
         // 根据datasource_id,database_name 进行 group by,计算得到数据库的分数
         List<JobQualityReport> databaseScoreList = jobQualityReportMapper.listDbScoreGroupByDatasource(datasourceId, yesterday);
         if (CollectionUtils.isNotEmpty(databaseScoreList)) {
             saveBatch(databaseScoreList);
         }
 
-        jobQualityReportMapper.delete(new QueryWrapper<JobQualityReport>().eq("entity_level","datasource").eq("datasource_id", datasourceId));
+        jobQualityReportMapper.delete(new LambdaQueryWrapper<JobQualityReport>()
+                .eq(JobQualityReport::getEntityLevel, DATASOURCE)
+                .eq(JobQualityReport::getDatasourceId, datasourceId)
+                .eq(JobQualityReport::getReportDate, yesterday));;
+
         // 根据datasource_id,database_name 进行 group by,计算得到数据库的分数
         List<JobQualityReport> datasourceScoreList = jobQualityReportMapper.listDatasourceScoreGroupByDatasource(datasourceId, yesterday);
         if (CollectionUtils.isNotEmpty(datasourceScoreList)) {
@@ -259,16 +269,16 @@ public class JobQualityReportServiceImpl extends ServiceImpl<JobQualityReportMap
         JobQualityReportScoreTrend scoreTrend = new JobQualityReportScoreTrend();
         String startDateStr = "";
         String endDateStr = "";
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(YYYY_MM_DD);
         if (StringUtils.isEmpty(dashboardParam.getReportDate())) {
-            startDateStr = DateUtils.format(DateUtils.addDays(new Date(), -7),"yyyy-MM-dd");
-            endDateStr = DateUtils.format(DateUtils.addDays(new Date(), -1),"yyyy-MM-dd");
+            startDateStr = DateUtils.format(DateUtils.addDays(new Date(), -7),YYYY_MM_DD);
+            endDateStr = DateUtils.format(DateUtils.addDays(new Date(), -1),YYYY_MM_DD);
         } else {
             endDateStr = dashboardParam.getReportDate();
             LocalDate endDate = LocalDate.parse(endDateStr, formatter);
             ZonedDateTime zonedDateTime = endDate.atStartOfDay(ZoneId.systemDefault());
             Date date = Date.from(zonedDateTime.toInstant());
-            startDateStr = DateUtils.format(DateUtils.addDays(date,-6),"yyyy-MM-dd");
+            startDateStr = DateUtils.format(DateUtils.addDays(date,-6),YYYY_MM_DD);
         }
 
         LocalDate startDate = LocalDate.parse(startDateStr, formatter);
@@ -278,7 +288,7 @@ public class JobQualityReportServiceImpl extends ServiceImpl<JobQualityReportMap
         LocalDate currentDate = startDate;
 
         while (!currentDate.isAfter(endDate)) {
-            dateList.add(currentDate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+            dateList.add(currentDate.format(DateTimeFormatter.ofPattern(YYYY_MM_DD)));
             currentDate = currentDate.plusDays(1);
         }
 
@@ -342,9 +352,9 @@ public class JobQualityReportServiceImpl extends ServiceImpl<JobQualityReportMap
         }
 
         if (StringUtils.isNotEmpty(dashboardParam.getTableName())) {
-            queryWrapper.eq(JobQualityReport::getEntityLevel, "column");
+            queryWrapper.eq(JobQualityReport::getEntityLevel, COLUMN);
         } else {
-            queryWrapper.eq(JobQualityReport::getEntityLevel, "table");
+            queryWrapper.eq(JobQualityReport::getEntityLevel, TABLE);
         }
 
         return page(page, queryWrapper).convert(jobQualityReport -> {

@@ -120,6 +120,16 @@ public class MultiTableAccuracy implements SqlMetric {
     }
 
     @Override
+    public ExecuteSql getDirectActualValue(Map<String, String> inputParameter) {
+        String uniqueKey = inputParameter.get(METRIC_UNIQUE_KEY);
+        ExecuteSql executeSql = new ExecuteSql();
+        executeSql.setResultTable("invalidate_count_" + uniqueKey);
+        executeSql.setSql("select count(1) as actual_value_" + uniqueKey + " from ( " + invalidateItemsSql.toString() + " ) t");
+        executeSql.setErrorOutput(false);
+        return executeSql;
+    }
+
+    @Override
     public List<DataVinesDataType> suitableType() {
         return Collections.emptyList();
     }

@@ -18,13 +18,16 @@ package io.datavines.engine.local.config;
 
 import io.datavines.common.config.SinkConfig;
 import io.datavines.common.config.enums.SinkType;
-import io.datavines.common.entity.ConnectorParameter;
+import io.datavines.common.entity.ExecuteSql;
 import io.datavines.common.entity.job.BaseJobParameter;
 import io.datavines.common.exception.DataVinesException;
 import io.datavines.common.utils.JSONUtils;
+import io.datavines.common.utils.ParameterUtils;
 import io.datavines.common.utils.StringUtils;
 import io.datavines.connector.api.ConnectorFactory;
+import io.datavines.engine.config.MetricParserUtils;
 import io.datavines.metric.api.ExpectedValue;
+import io.datavines.metric.api.SqlMetric;
 import io.datavines.spi.PluginLoader;
 import org.apache.commons.collections4.CollectionUtils;
 
@@ -94,7 +97,26 @@ public class LocalSingleTableMetricBuilder extends BaseLocalConfigurationBuilder
                     connectorParameterMap.put(ERROR_DATA_FILE_NAME, jobExecutionInfo.getErrorDataFileName());
                     connectorParameterMap.put(ERROR_DATA_DIR, metricInputParameter.get(ERROR_DATA_DIR));
                     connectorParameterMap.put(METRIC_NAME, metricInputParameter.get(METRIC_NAME));
-                    connectorParameterMap.put(INVALIDATE_ITEMS_TABLE, metricInputParameter.get(INVALIDATE_ITEMS_TABLE));
+                    boolean isEnableUseView = false;
+                    if (metricInputParameter.get(ENABLE_USE_VIEW) != null) {
+                        isEnableUseView = Boolean.parseBoolean(metricInputParameter.get(ENABLE_USE_VIEW));
+                    }
+
+                    if (isEnableUseView) {
+                        connectorParameterMap.put(INVALIDATE_ITEMS_TABLE, metricInputParameter.get(INVALIDATE_ITEMS_TABLE));
+                    } else {
+                        String metricType = parameter.getMetricType();
+                        SqlMetric sqlMetric = PluginLoader
+                                .getPluginLoader(SqlMetric.class)
+                                .getNewPlugin(metricType);
+                        MetricParserUtils.operateInputParameter(metricInputParameter, sqlMetric, jobExecutionInfo);
+                        if (sqlMetric.getInvalidateItems(metricInputParameter) != null) {
+                            ExecuteSql invalidateItemExecuteSql = sqlMetric.getInvalidateItems(metricInputParameter);
+                            connectorParameterMap.put(INVALIDATE_ITEMS_TABLE, "(" + ParameterUtils.convertParameterPlaceholders(invalidateItemExecuteSql.getSql(), metricInputParameter) + ") t");
+                        }
+                    }
+
+                    connectorParameterMap.put(ENABLE_USE_VIEW, isEnableUseView);
                     connectorParameterMap.put(INVALIDATE_ITEM_CAN_OUTPUT, metricInputParameter.get(INVALIDATE_ITEM_CAN_OUTPUT));
                     // use to get source type converter in sink
                     connectorParameterMap.put(SRC_CONNECTOR_TYPE, metricInputParameter.get(SRC_CONNECTOR_TYPE));

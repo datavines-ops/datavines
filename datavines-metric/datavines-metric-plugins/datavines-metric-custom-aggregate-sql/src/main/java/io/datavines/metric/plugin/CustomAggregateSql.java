@@ -97,7 +97,11 @@ public class CustomAggregateSql implements SqlMetric {
         inputParameter.put(ACTUAL_TABLE, inputParameter.get(TABLE));
         String actualAggregateSql = inputParameter.get(ACTUAL_AGGREGATE_SQL);
         if (StringUtils.isNotEmpty(actualAggregateSql)) {
-            actualAggregateSql = actualAggregateSql.replace("as actual_value", "as actual_value_" + inputParameter.get(METRIC_UNIQUE_KEY));
+            if (actualAggregateSql.contains("as actual_value")) {
+                actualAggregateSql = actualAggregateSql.replace("as actual_value", "as actual_value_" + inputParameter.get(METRIC_UNIQUE_KEY));
+            } else if (actualAggregateSql.contains("AS actual_value")) {
+                actualAggregateSql = actualAggregateSql.replace("AS actual_value", "as actual_value_" + inputParameter.get(METRIC_UNIQUE_KEY));
+            }
         }
         return new ExecuteSql(actualAggregateSql, inputParameter.get(TABLE));
     }

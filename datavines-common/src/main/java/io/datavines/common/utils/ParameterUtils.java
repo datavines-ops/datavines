@@ -38,7 +38,6 @@ public class ParameterUtils {
 
     private static final char PARAM_REPLACE_CHAR = '?';
 
-
     private ParameterUtils() {
         throw new UnsupportedOperationException("Construct ParameterUtils");
     }
@@ -74,7 +73,6 @@ public class ParameterUtils {
     }
 
     /**
-     * new
      * convert parameters place holders
      *
      * @param parameterString parameter

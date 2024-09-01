@@ -38,8 +38,7 @@ public class ExpectedValueExecutor implements ITransformExecutor {
             statement = connection.createStatement();
             env.setCurrentStatement(statement);
             resultSet = statement.executeQuery(sql);
-            ResultList resultList = SqlUtils.getListFromResultSet(resultSet, SqlUtils.getQueryFromsAndJoins(sql));
-            return resultList;
+            return SqlUtils.getListFromResultSet(resultSet, SqlUtils.getQueryFromsAndJoins(sql));
         } finally {
             SqlUtils.closeResultSet(resultSet);
             SqlUtils.closeStatement(statement);

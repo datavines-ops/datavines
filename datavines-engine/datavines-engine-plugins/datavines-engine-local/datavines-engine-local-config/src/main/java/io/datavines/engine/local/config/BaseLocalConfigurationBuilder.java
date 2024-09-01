@@ -207,12 +207,12 @@ public abstract class BaseLocalConfigurationBuilder extends BaseJobConfiguration
                 invalidateItemCanOutput &= sqlMetric.isInvalidateItemsCanOutput();
                 metricInputParameter.put(INVALIDATE_ITEM_CAN_OUTPUT, String.valueOf(invalidateItemCanOutput));
 
-                boolean isEnableExternalCatalog = true;
+                boolean isEnableUseView = false;
                 if (metricInputParameter.get(ENABLE_USE_VIEW) != null) {
-                    isEnableExternalCatalog = Boolean.parseBoolean(metricInputParameter.get(ENABLE_USE_VIEW));
+                    isEnableUseView = Boolean.parseBoolean(metricInputParameter.get(ENABLE_USE_VIEW));
                 }
 
-                if (isEnableExternalCatalog) {
+                if (isEnableUseView) {
                     // generate invalidate item execute sql
                     if (sqlMetric.getInvalidateItems(metricInputParameter) != null) {
                         ExecuteSql invalidateItemExecuteSql = sqlMetric.getInvalidateItems(metricInputParameter);
@@ -237,16 +237,30 @@ public abstract class BaseLocalConfigurationBuilder extends BaseJobConfiguration
                         metricInputParameter.put(ACTUAL_TABLE, sqlMetric.getActualValue(metricInputParameter).getResultTable());
                     }
                 } else {
-                    // generate actual value execute sql
-                    ExecuteSql actualValueExecuteSql = sqlMetric.getDirectActualValue(metricInputParameter);
-                    if (actualValueExecuteSql != null) {
-                        actualValueExecuteSql.setResultTable(sqlMetric.getDirectActualValue(metricInputParameter).getResultTable());
-                        MetricParserUtils.setTransformerConfig(
-                                metricInputParameter,
-                                transformConfigs,
-                                actualValueExecuteSql,
-                                TransformType.ACTUAL_VALUE.getDescription());
-                        metricInputParameter.put(ACTUAL_TABLE, sqlMetric.getActualValue(metricInputParameter).getResultTable());
+                    if (sqlMetric.getInvalidateItems(metricInputParameter) != null) {
+                        // generate actual value execute sql
+                        ExecuteSql actualValueExecuteSql = sqlMetric.getDirectActualValue(metricInputParameter);
+                        if (actualValueExecuteSql != null) {
+                            actualValueExecuteSql.setResultTable(sqlMetric.getDirectActualValue(metricInputParameter).getResultTable());
+                            MetricParserUtils.setTransformerConfig(
+                                    metricInputParameter,
+                                    transformConfigs,
+                                    actualValueExecuteSql,
+                                    TransformType.ACTUAL_VALUE.getDescription());
+                            metricInputParameter.put(ACTUAL_TABLE, sqlMetric.getActualValue(metricInputParameter).getResultTable());
+                        }
+                    } else {
+                        // generate actual value execute sql
+                        ExecuteSql actualValueExecuteSql = sqlMetric.getActualValue(metricInputParameter);
+                        if (actualValueExecuteSql != null) {
+                            actualValueExecuteSql.setResultTable(sqlMetric.getActualValue(metricInputParameter).getResultTable());
+                            MetricParserUtils.setTransformerConfig(
+                                    metricInputParameter,
+                                    transformConfigs,
+                                    actualValueExecuteSql,
+                                    TransformType.ACTUAL_VALUE.getDescription());
+                            metricInputParameter.put(ACTUAL_TABLE, sqlMetric.getActualValue(metricInputParameter).getResultTable());
+                        }
                     }
                 }
 

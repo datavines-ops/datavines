@@ -55,7 +55,7 @@ public class JobExecuteBootstrap {
         JobExecutionInfo jobExecutionInfo = new JobExecutionInfo(
                 id, submitJob.getName(),
                 submitJob.getEngineType(), JSONUtils.toJsonString(submitJob.getEngineParameter()),
-                submitJob.getErrorDataStorageType(), JSONUtils.toJsonString(submitJob.getErrorDataStorageParameter()), submitJob.getName()+"_"+ id,
+                submitJob.getErrorDataStorageType(), JSONUtils.toJsonString(submitJob.getErrorDataStorageParameter()), submitJob.getName() + "_" + id,
                 submitJob.getValidateResultDataStorageType(), JSONUtils.toJsonString(submitJob.getValidateResultDataStorageParameter()),
                 submitJob.getParameter());
 

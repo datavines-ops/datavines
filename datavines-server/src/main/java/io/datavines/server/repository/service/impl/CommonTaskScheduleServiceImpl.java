@@ -71,7 +71,7 @@ public class CommonTaskScheduleServiceImpl extends ServiceImpl<CommonTaskSchedul
     private CommonTaskSchedule create(CommonTaskScheduleCreateOrUpdate scheduleCreateOrUpdate) throws DataVinesServerException {
 
         Long dataSourceId = scheduleCreateOrUpdate.getDataSourceId();
-        CommonTaskSchedule commonTaskSchedule = baseMapper.selectOne(new QueryWrapper<CommonTaskSchedule>().lambda().eq(CommonTaskSchedule::getDataSourceId, dataSourceId));
+        CommonTaskSchedule commonTaskSchedule = baseMapper.selectOne(new QueryWrapper<CommonTaskSchedule>().lambda().eq(CommonTaskSchedule::getDataSourceId, dataSourceId).eq(CommonTaskSchedule::getTaskType, scheduleCreateOrUpdate.getTaskType()));
         if (commonTaskSchedule != null) {
             throw new DataVinesServerException(Status.CATALOG_TASK_SCHEDULE_EXIST_ERROR, commonTaskSchedule.getId());
         }

@@ -16,6 +16,7 @@
  */
 package io.datavines.core.enums;
 
+import lombok.Getter;
 import org.springframework.context.i18n.LocaleContextHolder;
 
 import java.util.Locale;
@@ -49,7 +50,7 @@ public enum Status {
     OLD_PASSWORD_IS_INCORRECT_ERROR(10020004, "Old Password is Incorrect", "旧密码错误"),
     NEW_PASSWORD_CONFIRM_IS_INCORRECT_ERROR(10020004, "New Password Confirm is Incorrect", "新密码确认错误"),
 
-    WORKSPACE_EXIST_ERROR(11010001, "WorkSpace {0} is Exist error", "工作空间 {0} 已存在错误"),
+    WORKSPACE_EXIST_ERROR(11010001, "WorkSpace {0} is Exist Error", "工作空间 {0} 已存在错误"),
     CREATE_WORKSPACE_ERROR(11010002, "Create WorkSpace {0} Error", "创建工作空间 {0} 错误"),
     WORKSPACE_NOT_EXIST_ERROR(11010003, "WorkSpace {0} is Not Exist Error", "工作空间 {0} 不存在错误"),
     UPDATE_WORKSPACE_ERROR(11010004, "Update WorkSpace {0} Error", "更新工作空间 {0} 错误"),
@@ -69,7 +70,6 @@ public enum Status {
     TASK_NOT_EXIST_ERROR(13010001, "Task {0} Not Exist Error", "任务{0}不存在错误"),
     TASK_LOG_PATH_NOT_EXIST_ERROR(13010002, "Task {0} Log Path  Not Exist Error", "任务 {0} 的日志路径不存在错误"),
     TASK_EXECUTE_HOST_NOT_EXIST_ERROR(13010003, "Task Execute Host {0} Not Exist Error", "任务 {0} 的执行服务地址不存在错误"),
-
     TASK_EXECUTE_NOT_RUNNING(13010004, "Taskt {0} has not running", "任务 {0} 还没有开始运行，请稍后重试"),
 
     JOB_PARAMETER_IS_NULL_ERROR(14010001, "Job {0} Parameter is Null Error", "作业 {0} 参数为空错误"),
@@ -83,7 +83,6 @@ public enum Status {
     METRIC_IS_NOT_EXIST(14010009, "The Metric {0} is not exist", "规则 {0} 不存在"),
     MULTI_TABLE_ACCURACY_NOT_SUPPORT_LOCAL_ENGINE(14010010, "Local Engine not support multi table accuracy in one datasource", "Local引擎不支持跨表准确性检查"),
     JOB_PARAMETER_CONTAIN_DUPLICATE_METRIC_ERROR(14010011, "Job {0} Parameter Contain Duplicate Metric", "作业中存在重复的检查规则"),
-
     JOB_SCHEDULE_EXIST_ERROR(14020001, "Job Schedule is Exist error, id must be not null", "作业定时任务已存在,ID 不能为空"),
     CREATE_JOB_SCHEDULE_ERROR(14020002, "Create Job Schedule {0} Error", "创建作业定时任务 {0} 错误"),
     JOB_SCHEDULE_NOT_EXIST_ERROR(14020003, "Job Schedule {0} is not Exist error", "作业定时任务 {0} 不存在错误"),
@@ -93,6 +92,7 @@ public enum Status {
     SCHEDULE_TYPE_NOT_VALIDATE_ERROR(14020007, "Schedule type {0} is not Validate Error", "定时器类型参数 {0} 错误"),
     SCHEDULE_CYCLE_NOT_VALIDATE_ERROR(14020008, "Schedule Param Cycle {0} is not Validate Error", "定时器周期参数 {0} 错误"),
     SCHEDULE_CRON_IS_INVALID_ERROR(14020009, "Schedule cron {0} is not Validate Error", "定时器 Crontab 表达式 {0} 错误"),
+    DATASOURCE_NOT_SUPPORT_ERROR_DATA_OUTPUT_TO_SELF_ERROR(14020010, "DataSource type {0} not Support Error Data Output To Self Error", "{0} 类型数据源不支持错误输出写入"),
 
     CREATE_TENANT_ERROR(15010001, "Create Tenant {0} Error", "创建 Linux 用户 {0} 错误"),
     TENANT_NOT_EXIST_ERROR(15010002, "Tenant {0} Not Exist Error", "Linux 用户 {0} 不存在错误"),
@@ -109,15 +109,13 @@ public enum Status {
     ERROR_DATA_STORAGE_EXIST_ERROR(17010003, "Error Data Storage {0} is Exist error", "错误数据存储 {0} 已存在"),
     UPDATE_ERROR_DATA_STORAGE_ERROR(17010004, "Update Error Data Storage {0} Error", "更新 错误数据存储 {0} 错误"),
 
-    DATASOURCE_NOT_SUPPORT_ERROR_DATA_OUTPUT_TO_SELF_ERROR(14020010, "DataSource type {0} not Support Error Data Output To Self Error", "{0} 类型数据源不支持错误输出写入"),
-
     SLA_ALREADY_EXIST_ERROR(18010001, "SLA {0} Already exist", "SLA {0} 已经存在"),
     SLA_SENDER_ALREADY_EXIST_ERROR(18020001, "SLA Sender {0}  Already exist", "SLA 发送器 {0} 已经存在"),
     SLA_JOB_IS_NOT_EXIST_ERROR(18010003, "SLA job {0} is not exist", "SLA job {0} 存在"),
 
     CATALOG_FETCH_DATASOURCE_NULL_ERROR(19010001, "获取元数据时数据源为空", "DataSource must not be null when fetch metadata"),
-
     CATALOG_FETCH_METADATA_PARAMETER_ERROR(19010002, "获取元数据参数错误", "Fetch Metadata Parameter Error"),
+
     CATALOG_TAG_CATEGORY_CREATE_ERROR(20010001, "Create Tag Category {0} Error", "创建标签类别 {0} 错误"),
     CATALOG_TAG_CATEGORY_NOT_EXIST_ERROR(20010002, "Tag Category {0} Not Exist Error", "标签类别 {0} 不存在"),
     CATALOG_TAG_CATEGORY_EXIST_ERROR(20010003, "Tag Category {0} is Exist error", "标签类别 {0} 已存在"),
@@ -129,22 +127,22 @@ public enum Status {
     CREATE_CATALOG_TASK_SCHEDULE_ERROR(20030002, "Create Catalog Task Schedule {0} Error", "创建元数据抓取定时任务 {0} 错误"),
     CATALOG_TASK_SCHEDULE_NOT_EXIST_ERROR(20030003, "Catalog Task Schedule {0} is not Exist error", "元数据抓取定时任务 {0} 不存在"),
     UPDATE_CATALOG_TASK_SCHEDULE_ERROR(20030004, "Update Catalog Task Schedule {0} Error", "更新元数据抓取定时任务 {0} 错误"),
-    CATALOG_PROFILE_INSTANCE_FQN_ERROR(20030005, "Catalog instance fqn {0} Error", "数据实体全限定名 {0} 错误"),
+    CATALOG_INSTANCE_FQN_ERROR(20030005, "Catalog instance fqn {0} Error", "数据实体全限定名 {0} 错误"),
+    CATALOG_INSTANCE_IS_NULL_ERROR(20040001, "Catalog instance fqn {0} Error", "数据实体 {0} 为空错误"),
 
-    CATALOG_PROFILE_INSTANCE_IS_NULL_ERROR(20040001, "Catalog instance fqn {0} Error", "数据实体 {0} 为空错误"),
     CREATE_ISSUE_ERROR(21010001, "Create Issue {0} Error", "创建Issue {0} 错误"),
     ISSUE_NOT_EXIST_ERROR(21010002, "Issue {0} Not Exist Error", "Issue {0} 不存在错误"),
     ISSUE_EXIST_ERROR(21010003, "Issue {0} is Exist error", "Issue {0} 已存在错误"),
     UPDATE_ISSUE_ERROR(21010004, "Update Issue {0} Error", "更新Issue {0} 错误"),
 
-
     CREATE_CONFIG_ERROR(22010001, "Create Config {0} Error", "创建参数 {0} 错误"),
     CONFIG_NOT_EXIST_ERROR(22010002, "Config {0} Not Exist Error", "参数 {0} 不存在错误"),
     CONFIG_EXIST_ERROR(22010003, "Config {0} is Exist error", "参数 {0} 已存在错误"),
     UPDATE_CONFIG_ERROR(22010004, "Update Config {0} Error", "更新参数 {0} 错误"),
-
     CAN_NOT_DELETE_DEFAULT_CONFIG_ERROR(22010005, "Can Not Delete Default Config {0} Error", "不能删除默认参数 {0} 错误"),
     ;
+
+    @Getter
     private final int code;
     private final String enMsg;
     private final String zhMsg;
@@ -153,10 +151,6 @@ public enum Status {
         this.code = code;
         this.enMsg = enMsg;
         this.zhMsg = zhMsg;
-    }
-
-    public int getCode() {
-        return this.code;
     }
 
     public String getMsg() {

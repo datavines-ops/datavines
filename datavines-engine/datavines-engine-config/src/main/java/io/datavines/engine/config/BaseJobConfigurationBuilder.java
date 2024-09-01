@@ -233,7 +233,7 @@ public abstract class BaseJobConfigurationBuilder implements JobConfigurationBui
         SinkConfig validateResultDataStorageConfig = new SinkConfig();
         validateResultDataStorageConfig.setPlugin(jobExecutionInfo.getValidateResultDataStorageType());
         Map<String, Object> configMap = getValidateResultSourceConfigMap(
-                ParameterUtils.convertParameterPlaceholders(sql, inputParameter),dbTable);
+                ParameterUtils.convertParameterPlaceholders(sql, inputParameter), dbTable);
         configMap.put(JOB_EXECUTION_ID, jobExecutionInfo.getId());
         configMap.put(INVALIDATE_ITEMS_TABLE, inputParameter.get(INVALIDATE_ITEMS_TABLE));
         configMap.put(METRIC_UNIQUE_KEY, inputParameter.get(METRIC_UNIQUE_KEY));

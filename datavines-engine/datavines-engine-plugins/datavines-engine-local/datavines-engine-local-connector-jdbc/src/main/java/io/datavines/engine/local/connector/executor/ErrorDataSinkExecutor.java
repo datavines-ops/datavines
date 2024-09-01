@@ -105,14 +105,22 @@ public class ErrorDataSinkExecutor extends BaseDataSinkExecutor {
             }
 
             String srcConnectorType = config.getString(SRC_CONNECTOR_TYPE);
+            boolean isEnableUseView = config.getBoolean(ENABLE_USE_VIEW);
             ConnectorFactory connectorFactory = PluginLoader.getPluginLoader(ConnectorFactory.class).getOrCreatePlugin(srcConnectorType);
             Dialect dialect = connectorFactory.getDialect();
             if (!checkTableExist(getConnectionHolder().getConnection(),
                     dialect.quoteIdentifier(targetDatabase)+"."+dialect.quoteIdentifier(targetTable), dialect)) {
-                sourceConnectionStatement.execute(dialect.getCreateTableAsSelectStatement(sourceTable, targetDatabase, targetTable));
+                if (isEnableUseView) {
+                    sourceConnectionStatement.execute(dialect.getCreateTableAsSelectStatement(sourceTable, targetDatabase, targetTable));
+                } else {
+                    sourceConnectionStatement.execute(dialect.getCreateTableAsSelectStatementFromSql(sourceTable, targetDatabase, targetTable));
+                }
             } else {
-                // drop data and insert new data
-                sourceConnectionStatement.execute(dialect.getInsertAsSelectStatement(sourceTable, targetDatabase, targetTable));
+                if (isEnableUseView) {
+                    sourceConnectionStatement.execute(dialect.getInsertAsSelectStatement(sourceTable, targetDatabase, targetTable));
+                } else {
+                    sourceConnectionStatement.execute(dialect.getInsertAsSelectStatementFromSql(sourceTable, targetDatabase, targetTable));
+                }
             }
 
         } catch (Exception e) {

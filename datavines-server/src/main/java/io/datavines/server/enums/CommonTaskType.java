@@ -24,23 +24,25 @@ import java.util.Map;
 public enum CommonTaskType {
 
     /**
-     * 0 - datasource
-     * 1 - database
-     * 2 - table
+     * 0 - catalog metadata fetch
+     * 1 - data quality report
      */
-    CATALOG_METADATA_FETCH(0, "catalog_metadata_fetch"),
-    DATA_QUALITY_REPORT(1, "data_quality_report")
+    CATALOG_METADATA_FETCH(0, "catalog_metadata_fetch", "元数据抓取"),
+    DATA_QUALITY_REPORT(1, "data_quality_report", "数据质量报告")
     ;
 
-    CommonTaskType(int code, String description){
+    CommonTaskType(int code, String description, String zhDescription){
         this.code = code;
         this.description = description;
+        this.zhDescription = zhDescription;
     }
 
     private final int code;
 
     @EnumValue
     private final String description;
+
+    private final String zhDescription;
 
     private static final Map<Integer, CommonTaskType> FETCH_TYPE_MAP = new HashMap<>();
 
@@ -63,5 +65,9 @@ public enum CommonTaskType {
 
     public String getDescription() {
         return description;
+    }
+
+    public String getZhDescription() {
+        return zhDescription;
     }
 }

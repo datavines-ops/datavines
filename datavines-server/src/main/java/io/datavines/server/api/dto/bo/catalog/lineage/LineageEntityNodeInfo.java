@@ -51,4 +51,6 @@ public class LineageEntityNodeInfo implements Serializable {
 
     private List<CatalogEntityInstanceInfo> columns;
 
+    private boolean hasNextNode;
+
 }

@@ -420,7 +420,7 @@ CREATE TABLE `dv_datasource` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `uuid` varchar(64) NOT NULL COMMENT '数据源UUID',
   `name` varchar(255) NOT NULL COMMENT '数据源名称',
-  `category` varchar(255) NOT NULL COMMENT '数据源类别',
+  `category` varchar(255) DEFAULT 'database' COMMENT '数据源类别',
   `type` varchar(255) NOT NULL COMMENT '数据源类型',
   `param` text NOT NULL COMMENT '数据源参数',
   `param_code` text NULL COMMENT '数据源参数MD5值',

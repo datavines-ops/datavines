@@ -111,6 +111,10 @@ public interface Dialect {
         return String.format("CREATE TABLE %s.%s AS SELECT * FROM %s", quoteIdentifier(targetDatabase), quoteIdentifier(targetTable), quoteIdentifier(srcTable));
     }
 
+    default String getCreateTableAsSelectStatementFromSql(String srcTable, String targetDatabase, String targetTable) {
+        return String.format("CREATE TABLE %s.%s AS SELECT t.* FROM %s", quoteIdentifier(targetDatabase), quoteIdentifier(targetTable), srcTable);
+    }
+
     default String getCreateTableStatement(String table, List<StructField> fields, TypeConverter typeConverter) {
         if (CollectionUtils.isNotEmpty(fields)) {
             String columns = fields.stream().map(field -> {
@@ -125,6 +129,10 @@ public interface Dialect {
 
     default String getInsertAsSelectStatement(String srcTable, String targetDatabase, String targetTable) {
         return String.format("INSERT INTO %s.%s SELECT * FROM %s", quoteIdentifier(targetDatabase), quoteIdentifier(targetTable), quoteIdentifier(srcTable));
+    }
+
+    default String getInsertAsSelectStatementFromSql(String srcTable, String targetDatabase, String targetTable) {
+        return String.format("INSERT INTO %s.%s SELECT t.* FROM %s", quoteIdentifier(targetDatabase), quoteIdentifier(targetTable), srcTable);
     }
 
     String getErrorDataScript(Map<String, String> configMap);

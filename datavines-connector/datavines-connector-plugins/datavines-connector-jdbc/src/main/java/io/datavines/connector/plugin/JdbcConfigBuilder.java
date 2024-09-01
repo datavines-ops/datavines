@@ -143,7 +143,16 @@ public class JdbcConfigBuilder implements ConfigBuilder {
     }
 
     protected List<PluginParams> getOtherParams(boolean isEn) {
-        return Collections.emptyList();
+
+        List<PluginParams> list = new ArrayList<>();
+
+        InputParam enableExternalCatalog = getInputParam("enable_use_view",
+                isEn ? "enable.use.view" : "允许使用视图",
+                isEn ? "please enter true or false" : "请填入 true 或者 false", 2, null,
+                "false");
+
+        list.add(enableExternalCatalog);
+        return list;
     }
 
 }

@@ -51,18 +51,4 @@ public class StarRocksConfigBuilder extends JdbcConfigBuilder {
                 isEn ? "please enter database" : "请填入数据库", 1, null,
                 null);
     }
-
-    @Override
-    protected List<PluginParams> getOtherParams(boolean isEn) {
-
-        List<PluginParams> list = new ArrayList<>();
-
-        InputParam enableExternalCatalog = getInputParam("enable_use_view",
-                isEn ? "enable.use.view" : "允许使用视图(设置为false时无法导出错误数据)",
-                isEn ? "please enter true or false" : "请填入 true 或者 false", 2, null,
-                "true");
-
-        list.add(enableExternalCatalog);
-        return list;
-    }
 }
