@@ -53,7 +53,7 @@ public class LogService {
     private JobExecutionService jobExecutionService;
 
     public LogResult queryLog(long jobExecutionId, int offsetLine){
-        return this.queryLog(jobExecutionId,offsetLine,10000);
+        return this.queryLog(jobExecutionId,offsetLine,10);
     }
 
     public LogResult queryLog(long jobExecutionId, int offsetLine, int limit){

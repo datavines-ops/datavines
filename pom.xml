@@ -113,6 +113,7 @@
         <javax.mail.version>1.6.2</javax.mail.version>
         <oracle.version>19.3.0.0</oracle.version>
         <orai18n.version>12.1.0.2.0</orai18n.version>
+        <jmx_prometheus_javaagent.version>0.20.0</jmx_prometheus_javaagent.version>
 
         <license-maven-plugin.version>3.0</license-maven-plugin.version>
         <maven-compiler-plugin.version>3.3</maven-compiler-plugin.version>
