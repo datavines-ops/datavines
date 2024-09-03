@@ -143,7 +143,7 @@ public class JobResultValidator {
                 dataSourceName = dataSource.getName();
                 dataSourceType = dataSource.getType();
                 if (!CommonPropertyUtils.DATAVINES_FQDN_DEFAULT.equals(CommonPropertyUtils.getString(CommonPropertyUtils.DATAVINES_FQDN))) {
-                    fqdn = CommonPropertyUtils.getString(CommonPropertyUtils.DATAVINES_FQDN) + String.format("/#/history?%s", Base64.getEncoder().encodeToString(String.format("jobId=%s&ds=%s",jobId,dataSourceName).getBytes(StandardCharsets.UTF_8)));
+                    fqdn = CommonPropertyUtils.getString(CommonPropertyUtils.DATAVINES_FQDN) + String.format("/#/history?%s", Base64.getEncoder().encodeToString(String.format("jobId=%s&executionId=%s",jobId,jobExecutionId).getBytes(StandardCharsets.UTF_8)));
                 }
             }
 
