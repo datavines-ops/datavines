@@ -21,12 +21,8 @@ import io.datavines.core.entity.ResultMap;
 import io.datavines.core.enums.Status;
 import io.datavines.core.exception.DataVinesServerException;
 import io.datavines.server.api.annotation.AuthIgnore;
-import io.datavines.server.api.dto.bo.job.JobExecutionPageParam;
-import io.datavines.server.api.dto.vo.JobExecutionResultVO;
 import io.datavines.server.dqc.coordinator.log.LogService;
 import io.datavines.server.repository.entity.JobExecution;
-import io.datavines.server.repository.service.JobExecutionErrorDataService;
-import io.datavines.server.repository.service.JobExecutionResultService;
 import io.datavines.server.repository.service.JobExecutionService;
 import io.datavines.server.utils.FileUtils;
 import io.swagger.annotations.Api;
@@ -41,7 +37,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.validation.Valid;
 import java.io.IOException;
 
 import static io.datavines.common.utils.OSUtils.judgeConcurrentHost;
@@ -56,40 +51,9 @@ public class JobHistoryExecutionController {
     @Autowired
     private JobExecutionService jobExecutionService;
 
-    @Autowired
-    private JobExecutionResultService jobExecutionResultService;
-
-    @Autowired
-    private JobExecutionErrorDataService jobExecutionErrorDataService;
-
     @Resource
     private LogService logService;
 
-    @AuthIgnore
-    @ApiOperation(value = "get job execution page", response = JobExecutionResultVO.class, responseContainer = "page")
-    @PostMapping(value = "/page")
-    public Object page(@Valid @RequestBody JobExecutionPageParam jobExecutionPageParam)  {
-        if(jobExecutionPageParam.getJobId()==null){
-            return ResponseEntity.ok(new ResultMap().fail());
-        }
-        return ResponseEntity.ok(new ResultMap().success().payload(jobExecutionService.getJobExecutionPage(jobExecutionPageParam)));
-    }
-
-    @AuthIgnore
-    @ApiOperation(value = "get job execution result", response = JobExecutionResultVO.class)
-    @GetMapping(value = "/list/result/{executionId}")
-    public Object getJobExecutionResultInfoList(@PathVariable("executionId") Long executionId) {
-        return ResponseEntity.ok(new ResultMap().success().payload(jobExecutionResultService.getResultVOListByJobExecutionId(executionId)));
-    }
-
-    @AuthIgnore
-    @ApiOperation(value = "get job execution error data page", response = Object.class, responseContainer = "page")
-    @GetMapping(value = "/errorDataPage")
-    public Object readErrorDataPage(@RequestParam("taskId") Long taskId,
-                                    @RequestParam("pageNumber") Integer pageNumber,
-                                    @RequestParam("pageSize") Integer pageSize){
-        return ResponseEntity.ok(new ResultMap().success().payload(jobExecutionErrorDataService.readErrorDataPage(taskId, pageNumber, pageSize)));
-    }
 
     @AuthIgnore
     @ApiOperation(value = "queryLogWithOffsetLine", notes = "query task log with offsetLine")

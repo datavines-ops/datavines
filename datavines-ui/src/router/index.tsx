@@ -18,7 +18,7 @@ export const routerNoLogin: TRouterItem[] = [
     },
     {
         path: '/history',
-        component: lazy(()=>import('@/view/JobHistory/Instance'))
+        component: lazy(()=>import('@/view/JobHistory'))
     }
 ];
 
