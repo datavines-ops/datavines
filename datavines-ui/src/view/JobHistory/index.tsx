@@ -1,24 +1,16 @@
 /* eslint-disable react/no-danger */
 import React, {useRef, useState, useImperativeHandle} from 'react';
-import {ModalProps, Spin} from 'antd';
-import {FullscreenExitOutlined, DownloadOutlined, SyncOutlined} from '@ant-design/icons';
-import {
-    useModal, useContextModal, useImmutable, usePersistFn, useMount, IF, useWatch,
-} from '@/common';
+import { DownloadOutlined, SyncOutlined} from '@ant-design/icons';
+import {usePersistFn, useMount,} from '@/common';
 import {useIntl} from 'react-intl';
 import {$http} from '@/http';
 import {download} from '@/utils';
 import querystring from "querystring";
 import {base64Decode} from "utils/base64";
 
-type InnerProps = {
-    innerRef: any
-}
-
 const JobHistory = () => {
     const intl = useIntl();
     const innerRef = useRef<any>();
-    const recordRef = useRef<any>();
     const dealMsg = (msg: string) => {
         if (msg) {
             return msg.replace(/\r\n/g, '<br>');
