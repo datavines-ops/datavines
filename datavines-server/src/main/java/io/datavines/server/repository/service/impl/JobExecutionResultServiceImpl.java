@@ -19,6 +19,7 @@ package io.datavines.server.repository.service.impl;
 import io.datavines.common.entity.job.BaseJobParameter;
 import io.datavines.common.utils.JSONUtils;
 import io.datavines.common.utils.ParameterUtils;
+import io.datavines.common.utils.StringUtils;
 import io.datavines.core.utils.LanguageUtils;
 import io.datavines.metric.api.ConfigItem;
 import io.datavines.metric.api.ExpectedValue;
@@ -153,7 +154,11 @@ public class JobExecutionResultServiceImpl extends ServiceImpl<JobExecutionResul
                 PluginLoader.getPluginLoader(ResultFormula.class).getOrCreatePlugin(jobExecutionResult.getResultFormula());
         String resultFormulaFormat = resultFormula.getResultFormat(!LanguageUtils.isZhContext())+" ${operator} ${threshold}";
 
-        jobExecutionResultVO.setCheckSubject(jobExecutionResult.getDatabaseName() + "." + jobExecutionResult.getTableName() + "." + jobExecutionResult.getColumnName());
+        String checkSubject = jobExecutionResult.getDatabaseName() + "." + jobExecutionResult.getTableName();
+        if (StringUtils.isNotEmpty(jobExecutionResult.getColumnName())) {
+            checkSubject +=  "." + jobExecutionResult.getColumnName();
+        }
+        jobExecutionResultVO.setCheckSubject(checkSubject);
         jobExecutionResultVO.setCheckResult(DqJobExecutionState.of(jobExecutionResult.getState()).getDescription(!LanguageUtils.isZhContext()));
         SqlMetric sqlMetric = PluginLoader.getPluginLoader(SqlMetric.class).getOrCreatePlugin(jobExecutionResult.getMetricName());
         if (!"multi_table_value_comparison".equalsIgnoreCase(sqlMetric.getName())) {
