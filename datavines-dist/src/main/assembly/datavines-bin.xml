@@ -65,6 +65,7 @@
                 <include>datavines-submit.sh</include>
             </includes>
             <outputDirectory>./bin</outputDirectory>
+            <lineEnding>unix</lineEnding>
         </fileSet>
 
         <fileSet>
