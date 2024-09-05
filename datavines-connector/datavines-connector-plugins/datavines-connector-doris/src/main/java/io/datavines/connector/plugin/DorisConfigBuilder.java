@@ -16,13 +16,10 @@
  */
 package io.datavines.connector.plugin;
 
-import io.datavines.common.param.form.PluginParams;
 import io.datavines.common.param.form.Validate;
 import io.datavines.common.param.form.type.InputParam;
 import lombok.extern.slf4j.Slf4j;
 
-import java.util.ArrayList;
-import java.util.List;
 
 @Slf4j
 public class DorisConfigBuilder extends JdbcConfigBuilder {
@@ -49,6 +46,14 @@ public class DorisConfigBuilder extends JdbcConfigBuilder {
         return getInputParam("database",
                 isEn ? "database" : "数据库",
                 isEn ? "please enter database" : "请填入数据库", 1, null,
+                null);
+    }
+
+    @Override
+    protected InputParam getPasswordInput(boolean isEn) {
+        return getInputParam("password",
+                isEn ? "password" : "密码",
+                isEn ? "please enter password" : "请填入密码", 1, null,
                 null);
     }
 }
