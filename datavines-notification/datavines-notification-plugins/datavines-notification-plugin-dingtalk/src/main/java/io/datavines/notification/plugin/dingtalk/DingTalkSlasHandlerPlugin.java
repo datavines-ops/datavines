@@ -81,11 +81,15 @@ public class DingTalkSlasHandlerPlugin implements SlasHandlerPlugin {
         InputParam webHook = InputParam.newBuilder("webHook", "webHook")
                 .addValidate(Validate.newBuilder().setRequired(true).build())
                 .build();
-        InputParam keyWord = InputParam.newBuilder("keyWord", "keyWord")
+        InputParam secret = InputParam.newBuilder("secret", "secret")
                 .addValidate(Validate.newBuilder().setRequired(true).build())
+                .build();
+        InputParam keyWord = InputParam.newBuilder("keyWord", "keyWord")
+                .addValidate(Validate.newBuilder().setRequired(false).build())
                 .build();
 
         paramsList.add(webHook);
+        paramsList.add(secret);
         paramsList.add(keyWord);
 
         ObjectMapper mapper = new ObjectMapper();
