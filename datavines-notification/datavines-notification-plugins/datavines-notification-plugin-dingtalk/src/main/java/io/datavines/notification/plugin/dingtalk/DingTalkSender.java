@@ -68,7 +68,6 @@ public class DingTalkSender {
         webHook=config.get("webHook");
         requireNonNull(webHook, "dingtalk webHook" + mustNotNull);
         secret=config.get("secret");
-        requireNonNull(secret, "dingtalk secret" + mustNotNull);
         keyWord=config.get("keyWord");
 
     }
@@ -117,6 +116,9 @@ public class DingTalkSender {
     }
 
     private String constructUrl() throws NoSuchAlgorithmException, InvalidKeyException, UnsupportedEncodingException {
+        if (org.apache.commons.lang3.StringUtils.isBlank(secret)) {
+            return webHook;
+        }
         Long timestamp = System.currentTimeMillis();
         String stringToSign = timestamp + "\n" + secret;
         Mac mac = Mac.getInstance("HmacSHA256");
