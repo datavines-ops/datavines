@@ -82,7 +82,7 @@ public class DingTalkSlasHandlerPlugin implements SlasHandlerPlugin {
                 .addValidate(Validate.newBuilder().setRequired(true).build())
                 .build();
         InputParam secret = InputParam.newBuilder("secret", "secret")
-                .addValidate(Validate.newBuilder().setRequired(true).build())
+                .addValidate(Validate.newBuilder().setRequired(false).build())
                 .build();
         InputParam keyWord = InputParam.newBuilder("keyWord", "keyWord")
                 .addValidate(Validate.newBuilder().setRequired(false).build())
