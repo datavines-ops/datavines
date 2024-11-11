@@ -100,7 +100,7 @@
                 <include>io.datavines:datavines-engine-common</include>
                 <include>io.datavines:datavines-engine-spark-transform-sql</include>
                 <include>io.datavines:datavines-engine-api</include>
-                <include>mysql:mysql-connector-java</include>
+                <include>com.mysql:mysql-connector-j</include>
                 <include>org.apache.httpcomponents:httpclient</include>
                 <include>org.apache.httpcomponents:httpcore</include>
                 <include>ru.yandex.clickhouse:clickhouse-jdbc</include>

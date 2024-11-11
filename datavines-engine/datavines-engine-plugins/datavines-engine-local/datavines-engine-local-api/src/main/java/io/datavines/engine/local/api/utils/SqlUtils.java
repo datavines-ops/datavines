@@ -169,7 +169,7 @@ public class SqlUtils {
         try {
             net.sf.jsqlparser.statement.Statement parse = CCJSqlParserUtil.parse(sql);
             Select select = (Select) parse;
-            SelectBody selectBody = select.getSelectBody();
+            Select selectBody = select.getSelectBody();
             if (selectBody instanceof PlainSelect) {
                 PlainSelect plainSelect = (PlainSelect) selectBody;
                 columnPrefixExtractor(columnPrefixes, plainSelect);
@@ -177,8 +177,8 @@ public class SqlUtils {
 
             if (selectBody instanceof SetOperationList) {
                 SetOperationList setOperationList = (SetOperationList) selectBody;
-                List<SelectBody> selects = setOperationList.getSelects();
-                for (SelectBody optSelectBody : selects) {
+                List<Select> selects = setOperationList.getSelects();
+                for (Select optSelectBody : selects) {
                     PlainSelect plainSelect = (PlainSelect) optSelectBody;
                     columnPrefixExtractor(columnPrefixes, plainSelect);
                 }
@@ -223,11 +223,8 @@ public class SqlUtils {
             }
 
             @Override
-            public void visit(SubSelect subSelect) {
-            }
+            public void visit(ParenthesedSelect parenthesedSelect) {
 
-            @Override
-            public void visit(SubJoin subjoin) {
             }
 
             @Override
@@ -235,15 +232,12 @@ public class SqlUtils {
             }
 
             @Override
-            public void visit(ValuesList valuesList) {
-            }
-
-            @Override
             public void visit(TableFunction tableFunction) {
             }
 
             @Override
-            public void visit(ParenthesisFromItem aThis) {
+            public void visit(ParenthesedFromItem parenthesedFromItem) {
+
             }
         };
     }

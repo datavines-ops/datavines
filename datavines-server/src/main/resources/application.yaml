@@ -14,16 +14,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+server:
+  port: 5600
+
 spring:
+  config:
+    activate:
+      on-profile: mysql
+
   main:
     banner-mode: off
     allow-circular-references: true
   application:
     name: datavines-server
+
+  #datasource:
+  #  driver-class-name: org.postgresql.Driver
+  #  url: jdbc:postgresql://127.0.0.1:5432/datavines
+  #  username: postgres
+  #  password: 123456
   datasource:
-    driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://127.0.0.1:5432/datavines
-    username: postgres
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://127.0.0.1:3306/datavines?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai
+    username: root
     password: 123456
     hikari:
       connection-test-query: select 1
@@ -66,9 +79,6 @@ mybatis-plus:
 #  configuration:
 #    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
-server:
-  port: 5600
-
 management:
   endpoints:
     web:
@@ -80,16 +90,3 @@ management:
 
 logging:
   config: classpath:server-logback.xml
----
-spring:
-  config:
-    activate:
-      on-profile: mysql
-  datasource:
-    driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://127.0.0.1:3306/datavines?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai
-    username: root
-    password: 123456
-  quartz:
-    properties:
-      org.quartz.jobStore.driverDelegateClass: org.quartz.impl.jdbcjobstore.StdJDBCDelegate
