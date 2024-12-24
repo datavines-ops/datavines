@@ -42,6 +42,9 @@ const Index = ({ form, detail }: InnerProps) => {
                 executorMemory: parameter.executorMemory ?? '2G',
                 executorCores: parameter.executorCores ?? 2,
                 others: parameter.others ?? '--conf spark.yarn.maxAppAttempts=1',
+                parallelism: parameter.parallelism ?? 1,
+                jobName: parameter.jobName ?? '',
+                yarnQueue: parameter.yarnQueue ?? '',
                 tenantCode: detail?.tenantCode ? detail.tenantCode.toString() : '',
                 env: detail?.env ? detail.env.toString() : '',
                 engineType: detail?.engineType ? detail.engineType.toString() : 'local',
@@ -128,6 +131,56 @@ const Index = ({ form, detail }: InnerProps) => {
             </Form.Item>
         </>
     );
+    const renderFlink = () => (
+        <>
+            <Form.Item
+                dependencies={['actuatorType']}
+                {...layoutActuatorLineItem}
+                label={intl.formatMessage({ id: 'dv_metric_actuator_deploy_mode' })}
+                name="deployMode"
+                rules={[...requiredRule]}
+                initialValue="cluster"
+            >
+                <Radio.Group>
+                    <Radio value="cluster">cluster</Radio>
+                    <Radio value="yarn">yarn</Radio>
+                    <Radio value="local">local</Radio>
+                </Radio.Group>
+            </Form.Item>
+            <Row gutter={30}>
+                <Col span={12}>
+                    <Form.Item
+                        {...layoutActuatorItem}
+                        label={intl.formatMessage({ id: 'dv_metric_actuator_parallelism' })}
+                        name="parallelism"
+                        rules={[...requiredRule]}
+                    >
+                        <Input autoComplete="off" allowClear />
+                    </Form.Item>
+                </Col>
+                <Col span={12}>
+                    <Form.Item
+                        {...layoutActuatorItem}
+                        label={intl.formatMessage({ id: 'dv_metric_actuator_job_name' })}
+                        name="jobName"
+                        rules={[...requiredRule]}
+                    >
+                        <Input autoComplete="off" allowClear />
+                    </Form.Item>
+                </Col>
+                <Col span={12}>
+                    <Form.Item
+                        {...layoutActuatorItem}
+                        label={intl.formatMessage({ id: 'dv_metric_actuator_yarn_queue' })}
+                        name="yarnQueue"
+                        rules={[...requiredRule]}
+                    >
+                        <Input autoComplete="off" allowClear />
+                    </Form.Item>
+                </Col>
+            </Row>
+        </>
+    );
     return (
         <Title title={intl.formatMessage({ id: 'dv_metric_title_actuator_engine_config' })}>
             <Row gutter={30}>
@@ -150,10 +203,13 @@ const Index = ({ form, detail }: InnerProps) => {
             <Form.Item noStyle dependencies={['engineType']}>
                 {() => {
                     const value = form.getFieldValue('engineType');
-                    if (value !== 'spark' && value !== 'livy') {
-                        return null;
+                    if (value === 'spark' || value === 'livy') {
+                        return renderSpark();
                     }
-                    return renderSpark();
+                    if (value === 'flink') {
+                        return renderFlink();
+                    }
+                    return null;
                 }}
             </Form.Item>
 

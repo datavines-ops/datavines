@@ -23,8 +23,8 @@ import io.datavines.common.entity.JobExecutionRequest;
 import io.datavines.common.entity.ProcessResult;
 import io.datavines.common.enums.ExecutionStatus;
 import io.datavines.common.utils.LoggerUtils;
-import io.datavines.engine.core.executor.AbstractYarnEngineExecutor;
-import io.datavines.engine.core.utils.ShellCommandProcess;
+import io.datavines.engine.executor.core.base.AbstractYarnEngineExecutor;
+import io.datavines.engine.executor.core.executor.ShellCommandProcess;
 import io.datavines.engine.flink.executor.utils.FlinkArgsUtils;
 import io.datavines.engine.flink.executor.utils.FlinkParameters;
 
@@ -32,8 +32,6 @@ public class FlinkEngineExecutor extends AbstractYarnEngineExecutor {
 
     private static final String FLINK_COMMAND = "${FLINK_HOME}/bin/flink";
     private Configurations configurations;
-    private ProcessResult processResult;
-    private boolean isCancel;
 
     @Override
     public void init(JobExecutionRequest jobExecutionRequest, Logger logger, Configurations configurations) throws Exception {
@@ -42,11 +40,14 @@ public class FlinkEngineExecutor extends AbstractYarnEngineExecutor {
 
         this.jobExecutionRequest = jobExecutionRequest;
         this.logger = logger;
-        this.shellCommandProcess = new ShellCommandProcess(this::logHandle,
-                logger, jobExecutionRequest, configurations);
         this.configurations = configurations;
         this.processResult = new ProcessResult();
-        this.isCancel = false;
+        this.shellCommandProcess = new ShellCommandProcess(
+            this::logHandle,
+            logger,
+            jobExecutionRequest,
+            configurations
+        );
     }
 
     @Override
@@ -54,11 +55,8 @@ public class FlinkEngineExecutor extends AbstractYarnEngineExecutor {
         try {
             String command = buildCommand();
             logger.info("flink task command: {}", command);
-            int exitCode = shellCommandProcess.run(command);
-            processResult.setExitStatusCode(exitCode);
-            if (exitCode == 0) {
-                processResult.setExitStatusCode(ExecutionStatus.SUCCESS.getCode());
-            }
+            shellCommandProcess.run(command);
+            processResult.setExitStatusCode(ExecutionStatus.SUCCESS.getCode());
         } catch (Exception e) {
             logger.error("flink task error", e);
             processResult.setExitStatusCode(ExecutionStatus.FAILURE.getCode());
@@ -67,14 +65,8 @@ public class FlinkEngineExecutor extends AbstractYarnEngineExecutor {
     }
 
     @Override
-    public void cancel() throws Exception {
-        this.isCancel = true;
-        shellCommandProcess.cancel();
-    }
-
-    @Override
-    public boolean isCancel() throws Exception {
-        return this.isCancel;
+    public void after() throws Exception {
+        // 执行后的清理工作
     }
 
     @Override
@@ -88,11 +80,7 @@ public class FlinkEngineExecutor extends AbstractYarnEngineExecutor {
     }
 
     @Override
-    public void after() throws Exception {
-        // 执行后的清理工作
-    }
-
-    private String buildCommand() {
+    protected String buildCommand() {
         FlinkParameters parameters = new FlinkParameters();
         // Set parameters from configurations
         parameters.setMainJar(configurations.getString("mainJar"));
@@ -101,8 +89,8 @@ public class FlinkEngineExecutor extends AbstractYarnEngineExecutor {
         parameters.setMainArgs(configurations.getString("mainArgs"));
         parameters.setParallelism(configurations.getInt("parallelism", 1));
         parameters.setJobName(configurations.getString("jobName"));
-        parameters.setYarnQueue(configurations.getString("queue"));
-        
+        parameters.setYarnQueue(configurations.getString("yarnQueue"));
+
         return FLINK_COMMAND + " " + String.join(" ", FlinkArgsUtils.buildArgs(parameters));
     }
 }
