@@ -873,7 +873,7 @@ INSERT INTO `dv_config` VALUES ('21', '-1', 'livy.execution.threshold', '1000', 
 INSERT INTO `dv_config` VALUES ('22', '-1', 'livy.task.jars', CONCAT('datavines-common-1.0.0-SNAPSHOT.jar,datavines-spi-1.0.0-SNAPSHOT.jar,'
                                                                     'datavines-engine-spark-api-1.0.0-SNAPSHOT.jar,datavines-engine-spark-connector-jdbc-1.0.0-SNAPSHOT.jar,'
                                                                     'datavines-engine-core-1.0.0-SNAPSHOT.jar,datavines-engine-common-1.0.0-SNAPSHOT.jar,datavines-engine-spark-transform-sql-1.0.0-SNAPSHOT.jar,'
-                                                                    'datavines-engine-api-1.0.0-SNAPSHOT.jar,mysql-connector-java-8.0.16.jar,httpclient-4.4.1.jar,'
+                                                                    'datavines-engine-api-1.0.0-SNAPSHOT.jar,mysql-connector-j-8.4.0.jar,httpclient-4.4.1.jar,'
                                                                     'httpcore-4.4.1.jar,postgresql-42.2.6.jar,presto-jdbc-0.283.jar,trino-jdbc-407.jar,clickhouse-jdbc-0.1.53.jar,'
                                                                     'mongo-java-driver-3.9.0.jar,mongo-spark-connector_2.11-2.4.0.jar,datavines-engine-spark-connector-mongodb-1.0.0-SNAPSHOT.jar'),
                                 '1', '1', '2023-09-05 21:02:38', '1', '2023-09-05 21:02:38');
