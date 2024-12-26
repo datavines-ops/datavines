@@ -1,3 +1,4 @@
 local_weekly_avg=io.datavines.metric.expected.plugin.WeeklyAvg
 spark_weekly_avg=io.datavines.metric.expected.plugin.SparkWeeklyAvg
 livy_weekly_avg=io.datavines.metric.expected.plugin.SparkWeeklyAvg
+flink_weekly_avg=io.datavines.metric.expected.plugin.WeeklyAvg

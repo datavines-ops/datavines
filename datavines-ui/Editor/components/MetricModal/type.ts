@@ -43,14 +43,20 @@ export type TParameterItem = {
 }
 
 export type TEngineParameter = {
-    programType:string, // JAVA
-    deployMode:string,
+    programType: string, // JAVA
+    deployMode: string,
     driverCores: number,
     driverMemory: string,
     numExecutors: number,
-    executorMemory:string,
+    executorMemory: string,
     executorCores: number,
     others: string,
+    parallelism?: number,
+    jobName?: string,
+    yarnQueue?: string,
+    tenantCode?: string,
+    env?: string,
+    engineType?: string,
 }
 
 export type TDetail = null | {

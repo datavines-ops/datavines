@@ -158,7 +158,8 @@ public class MetricController {
         afterFilterSet = expectedValueList.stream()
                 .map(it ->it.replace("local_", "")
                             .replace("spark_","")
-                            .replace("livy_",""))
+                            .replace("livy_","")
+                            .replace("flink_",""))
                 .collect(Collectors.toSet());
 
         List<Item> items = new ArrayList<>();

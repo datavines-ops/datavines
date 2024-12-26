@@ -33,6 +33,7 @@
 
     <modules>
         <module>datavines-engine-spark</module>
+        <module>datavines-engine-flink</module>
         <module>datavines-engine-local</module>
         <module>datavines-engine-livy</module>
     </modules>

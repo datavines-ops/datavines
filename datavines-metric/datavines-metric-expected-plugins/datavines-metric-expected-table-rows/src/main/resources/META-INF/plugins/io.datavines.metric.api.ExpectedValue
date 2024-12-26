@@ -1,3 +1,4 @@
 local_table_total_rows=io.datavines.metric.expected.plugin.TableTotalRows
 spark_table_total_rows=io.datavines.metric.expected.plugin.TableTotalRows
 livy_table_total_rows=io.datavines.metric.expected.plugin.TableTotalRows
+flink_table_total_rows=io.datavines.metric.expected.plugin.TableTotalRows

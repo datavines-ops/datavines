@@ -70,13 +70,13 @@ public abstract class BaseJobConfigurationBuilder implements JobConfigurationBui
             this.inputParameter.put(COLUMN_SEPARATOR,
                     errorDataParameterMap.get(CommonPropertyUtils.COLUMN_SEPARATOR) == null ?
                             CommonPropertyUtils.COLUMN_SEPARATOR_DEFAULT : errorDataParameterMap.get(CommonPropertyUtils.COLUMN_SEPARATOR));
-            this.inputParameter.put(LINE_SEPERATOR,
+            this.inputParameter.put(LINE_SEPARATOR,
                     errorDataParameterMap.get(CommonPropertyUtils.LINE_SEPARATOR) == null ?
                             CommonPropertyUtils.LINE_SEPARATOR_DEFAULT : errorDataParameterMap.get(CommonPropertyUtils.LINE_SEPARATOR));
         } else {
             this.inputParameter.put(ERROR_DATA_DIR, CommonPropertyUtils.getString(CommonPropertyUtils.ERROR_DATA_DIR, CommonPropertyUtils.ERROR_DATA_DIR_DEFAULT));
             this.inputParameter.put(COLUMN_SEPARATOR, CommonPropertyUtils.getString(CommonPropertyUtils.COLUMN_SEPARATOR, CommonPropertyUtils.COLUMN_SEPARATOR_DEFAULT));
-            this.inputParameter.put(LINE_SEPERATOR, CommonPropertyUtils.getString(CommonPropertyUtils.LINE_SEPARATOR, CommonPropertyUtils.LINE_SEPARATOR_DEFAULT));
+            this.inputParameter.put(LINE_SEPARATOR, CommonPropertyUtils.getString(CommonPropertyUtils.LINE_SEPARATOR, CommonPropertyUtils.LINE_SEPARATOR_DEFAULT));
         }
 
         if (FILE.equalsIgnoreCase(jobExecutionInfo.getValidateResultDataStorageType())) {

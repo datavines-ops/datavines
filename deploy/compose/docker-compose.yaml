@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   datavines:
-    image: datavines:dev
+    image: datavines:latest
     container_name: datavines
     ports:
       - 5600:5600
