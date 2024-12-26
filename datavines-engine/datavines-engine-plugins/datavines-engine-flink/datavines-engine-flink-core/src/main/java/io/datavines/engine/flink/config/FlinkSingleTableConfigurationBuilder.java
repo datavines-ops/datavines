@@ -14,9 +14,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.datavines.engine.flink.core.config;
+package io.datavines.engine.flink.config;
 
-import io.datavines.common.config.Config;
 import io.datavines.common.config.EnvConfig;
 import io.datavines.common.config.SinkConfig;
 import io.datavines.common.config.SourceConfig;
@@ -32,11 +31,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import static io.datavines.common.CommonConstants.*;
 import static io.datavines.common.ConfigConstants.*;
-import static io.datavines.common.ConfigConstants.TABLE;
 
 public class FlinkSingleTableConfigurationBuilder extends BaseFlinkConfigurationBuilder {
+
 
     @Override
     public void buildEnvConfig() {
@@ -59,7 +57,7 @@ public class FlinkSingleTableConfigurationBuilder extends BaseFlinkConfiguration
                 }
                 
                 metricInputParameter.put(METRIC_UNIQUE_KEY, metricUniqueKey);
-                String expectedType = jobExecutionInfo.getEngineType() + "_" + parameter.getExpectedType();
+                String expectedType = "local_" + parameter.getExpectedType();
                 ExpectedValue expectedValue = PluginLoader
                         .getPluginLoader(ExpectedValue.class)
                         .getNewPlugin(expectedType);

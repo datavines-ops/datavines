@@ -1,3 +1,4 @@
 local_daily_avg=io.datavines.metric.expected.plugin.DailyAvg
 spark_daily_avg=io.datavines.metric.expected.plugin.SparkDailyAvg
 livy_daily_avg=io.datavines.metric.expected.plugin.SparkDailyAvg
+flink_daily_avg=io.datavines.metric.expected.plugin.DailyAvg

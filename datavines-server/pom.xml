@@ -378,6 +378,12 @@
 
         <dependency>
             <groupId>io.datavines</groupId>
+            <artifactId>datavines-engine-flink-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.datavines</groupId>
             <artifactId>datavines-engine-local-config</artifactId>
             <version>${project.version}</version>
         </dependency>

@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.datavines.engine.flink.core.config;
+package io.datavines.engine.flink.config;
 
 import io.datavines.common.config.EnvConfig;
 import io.datavines.common.config.SinkConfig;
@@ -40,7 +40,12 @@ import static io.datavines.common.CommonConstants.*;
 import static io.datavines.common.ConfigConstants.*;
 import static io.datavines.common.ConfigConstants.TABLE;
 
-
+/**
+ * 
+ *
+ * @author dataVines
+ * @since 2021-07-01
+ */
 @Slf4j
 public abstract class BaseFlinkConfigurationBuilder extends BaseJobConfigurationBuilder {
 
