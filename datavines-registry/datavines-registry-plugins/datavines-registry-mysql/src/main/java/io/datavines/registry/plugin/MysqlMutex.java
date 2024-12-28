@@ -70,11 +70,7 @@ public class MysqlMutex {
             RegistryLock registryLock = null;
             int count = 1;
             if (time > 0) {
-<<<<<<< HEAD
-                count  = Math.max(1, (int) (time * 1000 / LOCK_ACQUIRE_INTERVAL));
-=======
                 count = Math.max(1, (int) (time * 1000 / LOCK_ACQUIRE_INTERVAL));
->>>>>>> upstream/dev
             }
             while (count > 0) {
                 try {
@@ -86,11 +82,7 @@ public class MysqlMutex {
                     try {
                         clearExpireLock();
                     } catch (SQLException ex) {
-<<<<<<< HEAD
-                       log.error("clear expire lock error : ", ex);
-=======
                         log.error("clear expire lock error : ", ex);
->>>>>>> upstream/dev
                     }
                     ThreadUtils.sleep(LOCK_ACQUIRE_INTERVAL);
                     count--;
@@ -159,11 +151,7 @@ public class MysqlMutex {
 
     private boolean isExists(String key, ServerInfo serverInfo) throws SQLException {
         checkConnection();
-<<<<<<< HEAD
-        PreparedStatement preparedStatement = connection.prepareStatement("select * from dv_registry_lock where lock_key=?");
-=======
         PreparedStatement preparedStatement = connection.prepareStatement("select * from dv_registry_lock where lock_key=?", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
->>>>>>> upstream/dev
         preparedStatement.setString(1, key);
         ResultSet resultSet = preparedStatement.executeQuery();
 
@@ -184,11 +172,7 @@ public class MysqlMutex {
         preparedStatement.executeUpdate();
         preparedStatement.close();
         // 将超时的lockKey移除掉
-<<<<<<< HEAD
-        lockHoldMap.values().removeIf((v -> v.getUpdateTime().getTime() < (System.currentTimeMillis()- expireTimeWindow)));
-=======
         lockHoldMap.values().removeIf((v -> v.getUpdateTime().getTime() < (System.currentTimeMillis() - expireTimeWindow)));
->>>>>>> upstream/dev
     }
 
     private void checkConnection() throws SQLException {
