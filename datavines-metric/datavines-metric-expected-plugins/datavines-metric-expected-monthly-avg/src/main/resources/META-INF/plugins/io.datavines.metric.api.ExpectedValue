@@ -1,3 +1,8 @@
 local_monthly_avg=io.datavines.metric.expected.plugin.MonthlyAvg
 spark_monthly_avg=io.datavines.metric.expected.plugin.SparkMonthlyAvg
+<<<<<<< HEAD
 livy_monthly_avg=io.datavines.metric.expected.plugin.SparkMonthlyAvg
+flink_monthly_avg=io.datavines.metric.expected.plugin.MonthlyAvg
+=======
+livy_monthly_avg=io.datavines.metric.expected.plugin.SparkMonthlyAvg
+>>>>>>> upstream/dev

@@ -31,7 +31,6 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
-
 import javax.validation.constraints.NotNull;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -158,7 +157,8 @@ public class MetricController {
         afterFilterSet = expectedValueList.stream()
                 .map(it ->it.replace("local_", "")
                             .replace("spark_","")
-                            .replace("livy_",""))
+                            .replace("livy_","")
+                            .replace("flink_",""))
                 .collect(Collectors.toSet());
 
         List<Item> items = new ArrayList<>();
