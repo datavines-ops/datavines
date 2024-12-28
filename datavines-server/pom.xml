@@ -206,8 +206,13 @@
         </dependency>
 
         <dependency>
+<<<<<<< HEAD
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+=======
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
+>>>>>>> upstream/dev
         </dependency>
 
         <dependency>
@@ -301,7 +306,11 @@
             <artifactId>datavines-engine-executor</artifactId>
             <version>${project.version}</version>
         </dependency>
+<<<<<<< HEAD
+        
+=======
 
+>>>>>>> upstream/dev
         <dependency>
             <groupId>io.datavines</groupId>
             <artifactId>datavines-engine-spark-executor</artifactId>
@@ -326,6 +335,25 @@
             <version>${project.version}</version>
             <exclusions>
                 <exclusion>
+<<<<<<< HEAD
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-common</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-client</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-hdfs</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-yarn-common</artifactId>
+                </exclusion>
+                <exclusion>
+=======
+>>>>>>> upstream/dev
                     <artifactId>slf4j-log4j12</artifactId>
                     <groupId>org.slf4j</groupId>
                 </exclusion>
@@ -338,6 +366,39 @@
 
         <dependency>
             <groupId>io.datavines</groupId>
+<<<<<<< HEAD
+            <artifactId>datavines-engine-flink-executor</artifactId>
+            <version>${project.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-common</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-client</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-hdfs</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.hadoop</groupId>
+                    <artifactId>hadoop-yarn-common</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
+            <groupId>io.datavines</groupId>
+            <artifactId>datavines-engine-flink-core</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.datavines</groupId>
+=======
+>>>>>>> upstream/dev
             <artifactId>datavines-engine-local-config</artifactId>
             <version>${project.version}</version>
         </dependency>

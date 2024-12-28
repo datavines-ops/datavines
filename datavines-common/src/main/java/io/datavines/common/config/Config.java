@@ -43,6 +43,14 @@ public class Config {
         return String.valueOf(config.get(key));
     }
 
+<<<<<<< HEAD
+    public String getString(String key, String defaultValue) {
+        Object value = config.get(key);
+        return value != null ? String.valueOf(value) : defaultValue;
+    }
+
+=======
+>>>>>>> upstream/dev
     public List<String> getStringList(String key){
         return (List<String>)config.get(key);
     }
@@ -51,6 +59,14 @@ public class Config {
         return Integer.valueOf(String.valueOf(config.get(key)));
     }
 
+<<<<<<< HEAD
+    public Integer getInt(String key, Integer defaultValue) {
+        Object value = config.get(key);
+        return value != null ? Integer.valueOf(String.valueOf(value)) : defaultValue;
+    }
+
+=======
+>>>>>>> upstream/dev
     public Boolean getBoolean(String key){
         return Boolean.valueOf(String.valueOf(config.get(key)));
     }
@@ -63,6 +79,14 @@ public class Config {
         return Long.valueOf(String.valueOf(config.get(key)));
     }
 
+<<<<<<< HEAD
+    public Long getLong(String key, Long defaultValue) {
+        Object value = config.get(key);
+        return value != null ? Long.valueOf(String.valueOf(value)) : defaultValue;
+    }
+
+=======
+>>>>>>> upstream/dev
     public Boolean has(String key) {
         return config.get(key) != null;
     }

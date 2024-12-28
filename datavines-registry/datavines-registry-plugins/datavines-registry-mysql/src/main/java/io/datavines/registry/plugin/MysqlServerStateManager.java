@@ -47,10 +47,17 @@ public class MysqlServerStateManager {
     public MysqlServerStateManager(Connection connection, Properties properties) throws SQLException {
         this.connection = connection;
         this.properties = properties;
+<<<<<<< HEAD
+        serverInfo = new ServerInfo(NetUtils.getHost(), Integer.valueOf((String) properties.get("server.port")), new Timestamp(System.currentTimeMillis()),new Timestamp(System.currentTimeMillis()));
+        ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
+        executorService.scheduleAtFixedRate(new HeartBeater(),2,2, TimeUnit.SECONDS);
+        executorService.scheduleAtFixedRate(new ServerChecker(),5,10, TimeUnit.SECONDS);
+=======
         serverInfo = new ServerInfo(NetUtils.getHost(), Integer.valueOf((String) properties.get("server.port")), new Timestamp(System.currentTimeMillis()), new Timestamp(System.currentTimeMillis()));
         ScheduledExecutorService executorService = Executors.newScheduledThreadPool(2);
         executorService.scheduleAtFixedRate(new HeartBeater(), 2, 2, TimeUnit.SECONDS);
         executorService.scheduleAtFixedRate(new ServerChecker(), 5, 10, TimeUnit.SECONDS);
+>>>>>>> upstream/dev
     }
 
     public void registry(SubscribeListener subscribeListener) throws SQLException {
@@ -71,14 +78,22 @@ public class MysqlServerStateManager {
     }
 
     public void refreshServer() throws SQLException {
+<<<<<<< HEAD
+        ConcurrentHashMap<String,ServerInfo> newServers = fetchServers();
+=======
         ConcurrentHashMap<String, ServerInfo> newServers = fetchServers();
+>>>>>>> upstream/dev
         Set<String> offlineServer = new HashSet<>();
         if (newServers == null) {
             //do nothing
             return;
         }
         Set<String> onlineServer = new HashSet<>();
+<<<<<<< HEAD
+        newServers.forEach((k, v) ->{
+=======
         newServers.forEach((k, v) -> {
+>>>>>>> upstream/dev
             long updateTime = v.getUpdateTime().getTime();
             long now = System.currentTimeMillis();
             if (now - updateTime > 20000) {
@@ -100,7 +115,11 @@ public class MysqlServerStateManager {
             if (!deadServers.contains(x) && !x.equals(serverInfo.getAddr())) {
                 String[] values = x.split(":");
                 try {
+<<<<<<< HEAD
+                    executeDelete(new ServerInfo(values[0],Integer.valueOf(values[1])));
+=======
                     executeDelete(new ServerInfo(values[0], Integer.valueOf(values[1])));
+>>>>>>> upstream/dev
                     liveServerMap.remove(x);
                 } catch (SQLException e) {
                     log.error("delete server info error", e);
@@ -131,7 +150,11 @@ public class MysqlServerStateManager {
 
     private void executeInsert(ServerInfo serverInfo) throws SQLException {
         checkConnection();
+<<<<<<< HEAD
+        PreparedStatement preparedStatement = connection.prepareStatement("insert into dv_server (host,port) values (?,?)");
+=======
         PreparedStatement preparedStatement = connection.prepareStatement("insert into dv_server (host, port) values (?, ?)");
+>>>>>>> upstream/dev
         preparedStatement.setString(1, serverInfo.getHost());
         preparedStatement.setInt(2, serverInfo.getServerPort());
         preparedStatement.executeUpdate();
@@ -159,7 +182,11 @@ public class MysqlServerStateManager {
 
     private boolean isExists(ServerInfo serverInfo) throws SQLException {
         checkConnection();
+<<<<<<< HEAD
+        PreparedStatement preparedStatement = connection.prepareStatement("select * from dv_server where host=? and port=?");
+=======
         PreparedStatement preparedStatement = connection.prepareStatement("select * from dv_server where host= ? and port= ?", ResultSet.TYPE_SCROLL_INSENSITIVE, ResultSet.CONCUR_READ_ONLY);
+>>>>>>> upstream/dev
         preparedStatement.setString(1, serverInfo.getHost());
         preparedStatement.setInt(2, serverInfo.getServerPort());
         ResultSet resultSet = preparedStatement.executeQuery();
@@ -197,9 +224,15 @@ public class MysqlServerStateManager {
         return map;
     }
 
+<<<<<<< HEAD
+    public List<ServerInfo> getActiveServerList(){
+        List<ServerInfo> activeServerList = new ArrayList<>();
+        liveServerMap.forEach((k,v)-> {
+=======
     public List<ServerInfo> getActiveServerList() {
         List<ServerInfo> activeServerList = new ArrayList<>();
         liveServerMap.forEach((k, v) -> {
+>>>>>>> upstream/dev
             String[] values = k.split(":");
             if (values.length == 2) {
                 activeServerList.add(v);
