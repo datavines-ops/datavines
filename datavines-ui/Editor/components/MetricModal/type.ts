@@ -43,7 +43,6 @@ export type TParameterItem = {
 }
 
 export type TEngineParameter = {
-<<<<<<< HEAD
     programType: string, // JAVA
     deployMode: string,
     driverCores: number,
@@ -61,16 +60,6 @@ export type TEngineParameter = {
     taskManagerCount?: number,
     taskManagerMemory?: string,
     jobManagerMemory?: string,
-=======
-    programType:string, // JAVA
-    deployMode:string,
-    driverCores: number,
-    driverMemory: string,
-    numExecutors: number,
-    executorMemory:string,
-    executorCores: number,
-    others: string,
->>>>>>> upstream/dev
 }
 
 export type TDetail = null | {

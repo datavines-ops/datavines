@@ -35,7 +35,6 @@ const Index = ({ form, detail }: InnerProps) => {
                 parameter = JSON.parse(engineParameter);
             }
             form.setFieldsValue({
-<<<<<<< HEAD
                 deployMode: parameter.deployMode ?? 'local',
                 taskManagerCount: parameter.taskManagerCount ?? 2,
                 taskManagerMemory: parameter.taskManagerMemory ?? '2G',
@@ -43,16 +42,12 @@ const Index = ({ form, detail }: InnerProps) => {
                 parallelism: parameter.parallelism ?? 1,
                 jobName: parameter.jobName ?? '',
                 yarnQueue: parameter.yarnQueue ?? '',
-                others: parameter.others ?? '--conf flink.yarn.maxAppAttempts=1',
-=======
-                deployMode: parameter.deployMode ?? 'cluster',
                 driverCores: parameter.driverCores ?? 1,
                 driverMemory: parameter.driverMemory ?? '512M',
                 numExecutors: parameter.numExecutors ?? 2,
                 executorMemory: parameter.executorMemory ?? '2G',
                 executorCores: parameter.executorCores ?? 2,
                 others: parameter.others ?? '--conf spark.yarn.maxAppAttempts=1',
->>>>>>> upstream/dev
                 tenantCode: detail?.tenantCode ? detail.tenantCode.toString() : '',
                 env: detail?.env ? detail.env.toString() : '',
                 engineType: detail?.engineType ? detail.engineType.toString() : 'local',
@@ -139,7 +134,6 @@ const Index = ({ form, detail }: InnerProps) => {
             </Form.Item>
         </>
     );
-<<<<<<< HEAD
     const renderFlink = () => (
         <>
             <Form.Item
@@ -229,8 +223,6 @@ const Index = ({ form, detail }: InnerProps) => {
             </Form.Item>
         </>
     );
-=======
->>>>>>> upstream/dev
     return (
         <Title title={intl.formatMessage({ id: 'dv_metric_title_actuator_engine_config' })}>
             <Row gutter={30}>
@@ -253,7 +245,6 @@ const Index = ({ form, detail }: InnerProps) => {
             <Form.Item noStyle dependencies={['engineType']}>
                 {() => {
                     const value = form.getFieldValue('engineType');
-<<<<<<< HEAD
                     if (value === 'spark' || value === 'livy') {
                         return renderSpark();
                     }
@@ -261,12 +252,6 @@ const Index = ({ form, detail }: InnerProps) => {
                         return renderFlink();
                     }
                     return null;
-=======
-                    if (value !== 'spark' && value !== 'livy') {
-                        return null;
-                    }
-                    return renderSpark();
->>>>>>> upstream/dev
                 }}
             </Form.Item>
 

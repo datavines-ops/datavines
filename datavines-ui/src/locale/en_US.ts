@@ -292,10 +292,7 @@ export default {
     job_log_refresh: 'Refresh',
     job_log_download: 'Download',
     job_log_fullScreen: 'FullScreen',
-<<<<<<< HEAD
     dv_task_manager_count: 'Task Manager Count',
-=======
->>>>>>> upstream/dev
 
     error_create_btn: 'Create error data store',
     error_table_store_name: 'Storage Name',
@@ -333,7 +330,6 @@ export default {
     next_ten_cron_run_times: 'Next ten cron run times',
     view_future_execute_plan: 'view future execute plan',
     test_send: 'test send',
-<<<<<<< HEAD
 
     dv_deploy_mode: 'Deploy Mode',
     dv_deploy_mode_required: 'Please select deploy mode',
@@ -349,7 +345,5 @@ export default {
     dv_flink_deploy_mode_yarn_application: 'Yarn Application Mode',
     dv_deploy_mode_cluster: 'Cluster Mode',
     dv_deploy_mode_yarn: 'Yarn Mode',
-    dv_deploy_mode_local: 'Local Mode',
-=======
->>>>>>> upstream/dev
+    dv_deploy_mode_local: 'Local Mode'
 };
