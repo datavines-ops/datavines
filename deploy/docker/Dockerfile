@@ -1,57 +1,52 @@
-<<<<<<< HEAD
-FROM openjdk:8
-LABEL "author"="735140144"
-WORKDIR /datavines
-COPY ./datavines-1.0.0-SNAPSHOT-bin.tar.gz /datavines
-RUN tar -zxvf datavines-1.0.0-SNAPSHOT-bin.tar.gz
-RUN chmod +x datavines-1.0.0-SNAPSHOT-bin/bin/datavines-daemon.sh
-ENV TZ=Asia/Shanghai
-ENV LANG=zh_CN.UTF-8
-EXPOSE 5600
-CMD ["datavines-1.0.0-SNAPSHOT-bin/bin/datavines-daemon.sh","start_container",""]
-=======
-#
-# Licensed to the Apache Software Foundation (ASF) under one or more
-# contributor license agreements.  See the NOTICE file distributed with
-# this work for additional information regarding copyright ownership.
-# The ASF licenses this file to You under the Apache License, Version 2.0
-# (the "License"); you may not use this file except in compliance with
-# the License.  You may obtain a copy of the License at
-#
-#    http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-#
-
 FROM openjdk:8
 
 MAINTAINER 735140144
 
 ARG VERSION=1.0.0-SNAPSHOT
+ARG FLINK_VERSION=1.13.6
+ARG SCALA_VERSION=2.11
 
-ENV TZ=Asia/Shanghai
-ENV LANG=zh_CN.UTF-8
+ENV TZ=Asia/Shanghai \
+    LANG=zh_CN.UTF-8 \
+    FLINK_HOME=/opt/flink \
+    PATH=$PATH:/opt/flink/bin
 
 WORKDIR /opt
 
+# Install tini and wget for proper signal handling and downloading
 RUN apt-get update && \
-    apt-get install -y tini && \
+    apt-get install -y tini wget && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-COPY datavines-dist/target/datavines-${VERSION}-bin.tar.gz .
+# Download and setup Flink for engine support
+RUN wget -P /opt https://archive.apache.org/dist/flink/flink-${FLINK_VERSION}/flink-${FLINK_VERSION}-bin-scala_${SCALA_VERSION}.tgz && \
+    tar -xzf flink-${FLINK_VERSION}-bin-scala_${SCALA_VERSION}.tgz && \
+    mv flink-${FLINK_VERSION} flink && \
+    rm flink-${FLINK_VERSION}-bin-scala_${SCALA_VERSION}.tgz && \
+    mkdir -p $FLINK_HOME/plugins/metrics-prometheus && \
+    cp $FLINK_HOME/opt/flink-metrics-prometheus-${FLINK_VERSION}.jar $FLINK_HOME/plugins/metrics-prometheus/ && \
+    mkdir -p $FLINK_HOME/logs
 
+# Copy and extract datavines
+COPY datavines-dist/target/datavines-${VERSION}-bin.tar.gz .
 RUN tar -zxvf datavines-${VERSION}-bin.tar.gz && \
     mv datavines-${VERSION}-bin datavines && \
     rm -rf datavines-${VERSION}-bin.tar.gz
 
-RUN chmod +x datavines/bin/datavines-daemon.sh && sed -i 's/\r//g' datavines/bin/datavines-daemon.sh
+# Fix script permissions and line endings
+RUN chmod +x datavines/bin/datavines-daemon.sh && \
+    sed -i 's/\r//g' datavines/bin/datavines-daemon.sh
 
-EXPOSE 5600
+# Set up minimal Flink configuration
+RUN echo "jobmanager.memory.process.size: 1600m" >> $FLINK_HOME/conf/flink-conf.yaml && \
+    echo "taskmanager.memory.process.size: 1728m" >> $FLINK_HOME/conf/flink-conf.yaml && \
+    echo "taskmanager.numberOfTaskSlots: 4" >> $FLINK_HOME/conf/flink-conf.yaml && \
+    echo "parallelism.default: 2" >> $FLINK_HOME/conf/flink-conf.yaml
 
-CMD ["/usr/bin/tini", "--", "datavines/bin/datavines-daemon.sh", "start_container", ""]
->>>>>>> upstream/dev
+# Expose Datavines port (primary) and Flink ports (auxiliary)
+EXPOSE 5600 8081 6123
+
+# Use tini as init process
+ENTRYPOINT ["/usr/bin/tini", "--"]
+CMD ["datavines/bin/datavines-daemon.sh", "start_container", ""]
