@@ -78,7 +78,7 @@ export const FlinkConfiguration = ({ form, detail }: InnerProps) => {
         ],
     };
 
-    return <FormRender form={form} schema={schema} />;
+    return <FormRender form={form} {...schema} />;
 };
 
 export default FlinkConfiguration;

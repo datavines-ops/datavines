@@ -5,5 +5,6 @@ export type TConfigTableItem = {
     updateTime?: string,
     updater?: string,
     varValue?: string,
+    type?: 'flink' | 'spark',
+    flinkConfig?: any,
 }
-

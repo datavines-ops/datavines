@@ -1,6 +1,6 @@
 import React, { useRef, useState, useImperativeHandle } from 'react';
 import {
-    Input, ModalProps, Form, FormInstance, message, Select, Option,
+    Input, ModalProps, Form, FormInstance, message, Select,
 } from 'antd';
 import { useIntl } from 'react-intl';
 import {
@@ -63,8 +63,8 @@ export const CreateConfigComponent = ({ form, detail, innerRef }: InnerProps) =>
                 ],
                 widget: (
                     <Select>
-                        <Option value="flink">Flink</Option>
-                        <Option value="spark">Spark</Option>
+                        <Select.Option value="flink">Flink</Select.Option>
+                        <Select.Option value="spark">Spark</Select.Option>
                     </Select>
                 ),
             },
@@ -72,7 +72,7 @@ export const CreateConfigComponent = ({ form, detail, innerRef }: InnerProps) =>
                 name: 'flinkConfig',
                 shouldUpdate: true,
                 noStyle: true,
-                widget: ({ getFieldValue }) => {
+                children: ({ getFieldValue }: { getFieldValue: (field: string) => string }) => {
                     const type = getFieldValue('type');
                     return type === 'flink' ? <FlinkConfiguration form={form} detail={detail?.flinkConfig} /> : null;
                 },
