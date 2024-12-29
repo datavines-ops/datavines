@@ -49,6 +49,18 @@
         </dependency>
         
         <dependency>
+            <groupId>io.datavines</groupId>
+            <artifactId>datavines-engine-config</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>io.datavines</groupId>
+            <artifactId>datavines-connector-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        
+        <dependency>
             <groupId>org.apache.flink</groupId>
             <artifactId>flink-core</artifactId>
             <version>${flink.version}</version>
