@@ -309,8 +309,9 @@ export default {
     profile_schedule: '数据概览调度配置',
 
     config_title: '参数管理',
-    config_var_key: '参数名',
-    config_var_value: '参数值',
+    config_var_key: '变量键',
+    config_var_value: '变量值',
+    config_type: '配置类型',
     create_config: '创建参数',
 
     token_title: '令牌管理',

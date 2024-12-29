@@ -1,6 +1,6 @@
 import React, { useRef, useState, useImperativeHandle } from 'react';
 import {
-    Input, ModalProps, Form, FormInstance, message,
+    Input, ModalProps, Form, FormInstance, message, Select, Option,
 } from 'antd';
 import { useIntl } from 'react-intl';
 import {
@@ -9,6 +9,7 @@ import {
 import { $http } from '@/http';
 import { useSelector } from '@/store';
 import { TConfigTableItem } from "@/type/config";
+import { FlinkConfiguration } from './FlinkConfiguration';
 
 type InnerProps = {
     form: FormInstance,
@@ -49,6 +50,32 @@ export const CreateConfigComponent = ({ form, detail, innerRef }: InnerProps) =>
                     },
                 ],
                 widget: <Input autoComplete="off" />,
+            },
+            {
+                label: intl.formatMessage({ id: 'config_type' }),
+                name: 'type',
+                initialValue: detail?.type || 'flink',
+                rules: [
+                    {
+                        required: true,
+                        message: intl.formatMessage({ id: 'common_required_tip' }),
+                    },
+                ],
+                widget: (
+                    <Select>
+                        <Option value="flink">Flink</Option>
+                        <Option value="spark">Spark</Option>
+                    </Select>
+                ),
+            },
+            {
+                name: 'flinkConfig',
+                shouldUpdate: true,
+                noStyle: true,
+                widget: ({ getFieldValue }) => {
+                    const type = getFieldValue('type');
+                    return type === 'flink' ? <FlinkConfiguration form={form} detail={detail?.flinkConfig} /> : null;
+                },
             },
         ],
     };

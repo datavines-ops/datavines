@@ -309,8 +309,9 @@ export default {
     profile_schedule: 'Profile Schedule',
 
     config_title: 'Config Management',
-    config_var_key: 'Config Key',
-    config_var_value: 'Config Value',
+    config_var_key: 'Variable Key',
+    config_var_value: 'Variable Value',
+    config_type: 'Configuration Type',
     create_config: 'Create Config',
 
     token_title: 'Token Management',

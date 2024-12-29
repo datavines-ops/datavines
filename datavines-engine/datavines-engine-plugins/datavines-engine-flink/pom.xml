@@ -33,6 +33,9 @@
     <modules>
         <module>datavines-engine-flink-api</module>
         <module>datavines-engine-flink-core</module>
+        <module>datavines-engine-flink-config</module>
+        <module>datavines-engine-flink-transform</module>
+        <module>datavines-engine-flink-jdbc</module>
         <module>datavines-engine-flink-executor</module>
     </modules>
 
