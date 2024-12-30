@@ -43,7 +43,7 @@ public abstract class BaseCommandProcess {
     /**
      *  process
      */
-    private Process process;
+    protected Process process;
 
     /**
      *  log handler
@@ -60,7 +60,7 @@ public abstract class BaseCommandProcess {
      */
     protected Logger logger;
 
-    private final Configurations configurations;
+    protected final Configurations configurations;
 
     /**
      *  log list
@@ -163,7 +163,7 @@ public abstract class BaseCommandProcess {
      * @param process process
      * @return processId
      */
-    private int getProcessId(Process process){
+    protected int getProcessId(Process process){
         int processId = 0;
 
         try {
@@ -266,7 +266,7 @@ public abstract class BaseCommandProcess {
      * get the standard output of the process
      * @param process process
      */
-    private void parseProcessOutput(Process process) {
+    protected void parseProcessOutput(Process process) {
         String threadLoggerInfoName = String.format(LoggerUtils.JOB_LOGGER_THREAD_NAME + "-%s", jobExecutionRequest.getJobExecutionName());
         ExecutorService parseProcessOutputExecutorService = ThreadUtils.newDaemonSingleThreadExecutor(threadLoggerInfoName);
         parseProcessOutputExecutorService.submit(new Runnable(){
@@ -356,5 +356,9 @@ public abstract class BaseCommandProcess {
      * @throws IOException
      */
     protected abstract void createCommandFileIfNotExists(String execCommand, String commandFile) throws IOException;
+
+    protected Consumer<List<String>> getLogHandler() {
+        return logHandler;
+    }
 
 }

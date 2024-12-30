@@ -21,9 +21,10 @@ import java.util.List;
 
 public class FlinkArgsUtils {
 
-    private static final String FLINK_CLUSTER = "cluster";
     private static final String FLINK_LOCAL = "local";
-    private static final String FLINK_YARN = "yarn";
+    private static final String FLINK_YARN_SESSION = "yarn-session";
+    private static final String FLINK_YARN_PER_JOB = "yarn-per-job";
+    private static final String FLINK_YARN_APPLICATION = "yarn-application";
 
     private FlinkArgsUtils() {
         throw new IllegalStateException("Utility class");
@@ -32,16 +33,32 @@ public class FlinkArgsUtils {
     public static List<String> buildArgs(FlinkParameters param) {
         List<String> args = new ArrayList<>();
 
-        // Add run command
-        args.add("run");
+        // Add run command based on deployment mode
+        String deployMode = param.getDeployMode();
+        if (deployMode == null || deployMode.isEmpty()) {
+            deployMode = FLINK_LOCAL; // Default to local mode
+        }
 
-        // Add deployment mode
-        if (FLINK_CLUSTER.equals(param.getDeployMode())) {
-            args.add("-m");
-            args.add("yarn-cluster");
-        } else if (FLINK_YARN.equals(param.getDeployMode())) {
-            args.add("-m");
-            args.add("yarn-session");
+        switch (deployMode.toLowerCase()) {
+            case "yarn-session":
+                args.add("run");
+                args.add("-m");
+                args.add("yarn-session");
+                break;
+            case "yarn-per-job":
+                args.add("run");
+                args.add("-m");
+                args.add("yarn-per-job");
+                break;
+            case "yarn-application":
+                args.add("run-application");
+                args.add("-t");
+                args.add("yarn-application");
+                break;
+            case "local":
+            default:
+                args.add("run");
+                break;
         }
 
         // Add parallelism
@@ -50,13 +67,13 @@ public class FlinkArgsUtils {
             args.add(String.valueOf(param.getParallelism()));
         }
 
-        // Add job name if specified
-        if (param.getJobName() != null && !param.getJobName().isEmpty()) {
+        // Add job name if specified (only for YARN modes)
+        if (!FLINK_LOCAL.equals(deployMode) && param.getJobName() != null && !param.getJobName().isEmpty()) {
             args.add("-Dyarn.application.name=" + param.getJobName());
         }
 
-        // Add yarn queue if specified
-        if (param.getYarnQueue() != null && !param.getYarnQueue().isEmpty()) {
+        // Add yarn queue if specified (only for YARN modes)
+        if (!FLINK_LOCAL.equals(deployMode) && param.getYarnQueue() != null && !param.getYarnQueue().isEmpty()) {
             args.add("-Dyarn.application.queue=" + param.getYarnQueue());
         }
 

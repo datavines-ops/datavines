@@ -57,4 +57,12 @@ public class Configurations {
     public Float getFloat(String key,String defaultValue) {
         return Float.valueOf(configuration.getProperty(key,defaultValue));
     }
+
+    public long getLong(String key) {
+        return Long.parseLong(configuration.getProperty(key));
+    }
+
+    public long getLong(String key, long defaultValue) {
+        return Long.parseLong(configuration.getProperty(key, String.valueOf(defaultValue)));
+    }
 }

@@ -13,19 +13,17 @@ ENV TZ=Asia/Shanghai \
 
 WORKDIR /opt
 
-# Install tini and wget for proper signal handling and downloading
+# Install required packages
 RUN apt-get update && \
-    apt-get install -y tini wget && \
+    apt-get install -y tini wget sudo && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 # Download and setup Flink for engine support
-RUN wget -P /opt https://archive.apache.org/dist/flink/flink-${FLINK_VERSION}/flink-${FLINK_VERSION}-bin-scala_${SCALA_VERSION}.tgz && \
+RUN wget --no-check-certificate https://archive.apache.org/dist/flink/flink-${FLINK_VERSION}/flink-${FLINK_VERSION}-bin-scala_${SCALA_VERSION}.tgz && \
     tar -xzf flink-${FLINK_VERSION}-bin-scala_${SCALA_VERSION}.tgz && \
     mv flink-${FLINK_VERSION} flink && \
     rm flink-${FLINK_VERSION}-bin-scala_${SCALA_VERSION}.tgz && \
-    mkdir -p $FLINK_HOME/plugins/metrics-prometheus && \
-    cp $FLINK_HOME/opt/flink-metrics-prometheus-${FLINK_VERSION}.jar $FLINK_HOME/plugins/metrics-prometheus/ && \
     mkdir -p $FLINK_HOME/logs
 
 # Copy and extract datavines
@@ -36,7 +34,12 @@ RUN tar -zxvf datavines-${VERSION}-bin.tar.gz && \
 
 # Fix script permissions and line endings
 RUN chmod +x datavines/bin/datavines-daemon.sh && \
-    sed -i 's/\r//g' datavines/bin/datavines-daemon.sh
+    sed -i 's/\r//g' datavines/bin/datavines-daemon.sh && \
+    # Copy Flink dependencies
+    cp datavines/lib/datavines-flink-core*.jar $FLINK_HOME/lib/ && \
+    # Create necessary directories with proper permissions
+    mkdir -p /tmp/datavines/exec/job/flink && \
+    chmod -R 777 /tmp/datavines
 
 # Set up minimal Flink configuration
 RUN echo "jobmanager.memory.process.size: 1600m" >> $FLINK_HOME/conf/flink-conf.yaml && \
@@ -44,9 +47,15 @@ RUN echo "jobmanager.memory.process.size: 1600m" >> $FLINK_HOME/conf/flink-conf.
     echo "taskmanager.numberOfTaskSlots: 4" >> $FLINK_HOME/conf/flink-conf.yaml && \
     echo "parallelism.default: 2" >> $FLINK_HOME/conf/flink-conf.yaml
 
+# Create datavines user and set permissions
+RUN useradd -m -s /bin/bash datavines && \
+    echo "datavines ALL=(ALL) NOPASSWD: ALL" >> /etc/sudoers && \
+    chown -R datavines:datavines /opt/datavines /opt/flink /tmp/datavines
+
+USER datavines
+
 # Expose Datavines port (primary) and Flink ports (auxiliary)
 EXPOSE 5600 8081 6123
 
 # Use tini as init process
-ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD ["datavines/bin/datavines-daemon.sh", "start_container", ""]
+CMD ["/usr/bin/tini", "--", "datavines/bin/datavines-daemon.sh", "start_container", ""]

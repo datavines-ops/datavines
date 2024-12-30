@@ -20,6 +20,7 @@ import io.datavines.common.config.Configurations;
 import io.datavines.common.entity.JobExecutionRequest;
 import io.datavines.common.entity.ProcessResult;
 import io.datavines.common.enums.ExecutionStatus;
+import io.datavines.common.utils.OSUtils;
 import io.datavines.common.utils.ProcessUtils;
 import io.datavines.common.utils.YarnUtils;
 import io.datavines.engine.executor.core.executor.BaseCommandProcess;
@@ -55,10 +56,20 @@ public class FlinkCommandProcess extends BaseCommandProcess {
     private ProcessBuilder buildFlinkProcessBuilder(String command) throws IOException {
         List<String> commandList = new ArrayList<>();
         
-        // 将命令拆分为参数列表，保留引号内的空格
+        // Get flink home from configurations or environment variable
+        String flinkHome = configurations.getString("flink.home", System.getenv("FLINK_HOME"));
+        if (StringUtils.isEmpty(flinkHome)) {
+            throw new IOException("FLINK_HOME is not set in either configurations or environment variables");
+        }
+
+        // Build the flink command path
+        String flinkCmd = Paths.get(flinkHome, "bin", OSUtils.isWindows() ? "flink.cmd" : "flink").toString();
+        
+        // Split the command while preserving quoted spaces
         String[] cmdArray = command.split("\\s+(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+        commandList.add(flinkCmd);
         for (String cmd : cmdArray) {
-            // 移除引号
+            // Remove quotes
             cmd = cmd.replaceAll("^\"|\"$", "");
             if (!cmd.trim().isEmpty()) {
                 commandList.add(cmd);
@@ -68,17 +79,15 @@ public class FlinkCommandProcess extends BaseCommandProcess {
         ProcessBuilder processBuilder = new ProcessBuilder(commandList);
         processBuilder.directory(new File(jobExecutionRequest.getExecuteFilePath()));
         
-        // 设置环境变量
+        // Set environment variables
         Map<String, String> env = processBuilder.environment();
-        String flinkHome = configurations.getString("flink.home", System.getenv("FLINK_HOME"));
-        if (StringUtils.isNotEmpty(flinkHome)) {
-            env.put("FLINK_HOME", flinkHome);
-            // 添加到PATH
-            String path = env.get("PATH");
-            if (path != null) {
-                path = Paths.get(flinkHome, "bin") + File.pathSeparator + path;
-                env.put("PATH", path);
-            }
+        env.put("FLINK_HOME", flinkHome);
+        
+        // Add to PATH
+        String path = env.get("PATH");
+        if (path != null) {
+            path = Paths.get(flinkHome, "bin") + File.pathSeparator + path;
+            env.put("PATH", path);
         }
         
         return processBuilder;

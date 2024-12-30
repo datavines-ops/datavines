@@ -24,13 +24,15 @@ import io.datavines.common.entity.JobExecutionRequest;
 import io.datavines.common.entity.ProcessResult;
 import io.datavines.common.enums.ExecutionStatus;
 import io.datavines.common.utils.LoggerUtils;
+import io.datavines.common.utils.OSUtils;
 import io.datavines.engine.executor.core.base.AbstractYarnEngineExecutor;
 import io.datavines.engine.executor.core.executor.BaseCommandProcess;
-import io.datavines.engine.flink.executor.utils.FlinkParameters;
 import io.datavines.common.utils.YarnUtils;
 import org.apache.commons.lang3.StringUtils;
 
 import java.io.File;
+import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 
 public class FlinkEngineExecutor extends AbstractYarnEngineExecutor {
@@ -74,15 +76,13 @@ public class FlinkEngineExecutor extends AbstractYarnEngineExecutor {
                 
                 // Set timeout for the process
                 ((FlinkCommandProcess)shellCommandProcess).setTimeout(timeout);
-                ProcessResult result = shellCommandProcess.run(command);
+                processResult = shellCommandProcess.run(command);
                 
-                if (result.getExitStatusCode() == ExecutionStatus.SUCCESS.getCode()) {
-                    processResult.setExitStatusCode(ExecutionStatus.SUCCESS.getCode());
-                    processResult.setProcessId(Integer.valueOf(String.valueOf(jobExecutionRequest.getJobExecutionId())));
+                if (processResult.getExitStatusCode() == ExecutionStatus.SUCCESS.getCode()) {
                     logger.info("Flink job executed successfully");
                     return;
                 } else {
-                    String errorMsg = String.format("Flink job execution failed with exit code: %d", result.getExitStatusCode());
+                    String errorMsg = String.format("Flink job execution failed with exit code: %d", processResult.getExitStatusCode());
                     logger.error(errorMsg);
                     
                     if (retryCount < maxRetries) {
@@ -91,37 +91,165 @@ public class FlinkEngineExecutor extends AbstractYarnEngineExecutor {
                         retryCount++;
                         continue;
                     }
-                    
-                    processResult.setExitStatusCode(ExecutionStatus.FAILURE.getCode());
-                    processResult.setProcessId(Integer.valueOf(String.valueOf(jobExecutionRequest.getJobExecutionId())));
                     throw new RuntimeException(errorMsg);
                 }
             } catch (Exception e) {
                 logger.error("flink task error", e);
-                
                 if (retryCount < maxRetries) {
                     logger.info("Retrying... Attempt {} of {}", retryCount + 1, maxRetries);
                     Thread.sleep(retryInterval);
                     retryCount++;
                     continue;
                 }
-                
-                processResult.setExitStatusCode(ExecutionStatus.FAILURE.getCode());
-                processResult.setProcessId(Integer.valueOf(String.valueOf(jobExecutionRequest.getJobExecutionId())));
                 throw e;
             }
         }
     }
 
     @Override
-    public void after() throws Exception {
+    protected String buildCommand() {
+        List<String> commandParts = new ArrayList<>();
+        
+        // Get FLINK_HOME from configurations or environment variable
+        String flinkHome = configurations.getString("flink.home", System.getenv("FLINK_HOME"));
+        if (StringUtils.isEmpty(flinkHome)) {
+            // Try to find flink in common locations
+            String[] commonPaths = {
+                "C:\\Program Files\\flink",
+                "C:\\flink",
+                "/opt/flink",
+                "/usr/local/flink"
+            };
+            
+            for (String path : commonPaths) {
+                if (new File(path).exists()) {
+                    flinkHome = path;
+                    break;
+                }
+            }
+            
+            if (StringUtils.isEmpty(flinkHome)) {
+                throw new RuntimeException("FLINK_HOME is not set and Flink installation could not be found in common locations");
+            }
+            logger.info("FLINK_HOME not set, using detected path: {}", flinkHome);
+        }
+
+        // Build the flink command
+        String flinkCmd = Paths.get(flinkHome, "bin", OSUtils.isWindows() ? "flink.cmd" : "flink").toString();
+        if (!new File(flinkCmd).exists()) {
+            throw new RuntimeException("Flink command not found at: " + flinkCmd);
+        }
+        
+        // Parse application parameters
+        String deployMode = "local"; // Default to local mode
+        JsonNode envNode = null;
+        try {
+            String applicationParameter = jobExecutionRequest.getApplicationParameter();
+            if (StringUtils.isNotEmpty(applicationParameter)) {
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode jsonNode = mapper.readTree(applicationParameter);
+                envNode = jsonNode.get("env");
+                if (envNode != null && envNode.has("deployMode")) {
+                    deployMode = envNode.get("deployMode").asText();
+                }
+            }
+        } catch (Exception e) {
+            logger.warn("Failed to parse applicationParameter, using default mode: local", e);
+        }
+        
+        // If applicationParameter doesn't specify deployMode, get from configurations
+        if ("local".equals(deployMode)) {
+            deployMode = configurations.getString("deployMode", "local");
+        }
+        
+        logger.info("Using deploy mode: {}", deployMode);
+        
+        // Build command parts
+        commandParts.add(flinkCmd);
+        
+        // Add run command and deployment mode specific args
+        switch (deployMode.toLowerCase()) {
+            case "yarn-session":
+                commandParts.add("run");
+                commandParts.add("-m");
+                commandParts.add("yarn-session");
+                addYarnConfig(commandParts, envNode);
+                break;
+            case "yarn-per-job":
+                commandParts.add("run");
+                commandParts.add("-m");
+                commandParts.add("yarn-per-job");
+                addYarnConfig(commandParts, envNode);
+                break;
+            case "yarn-application":
+                commandParts.add("run-application");
+                commandParts.add("-t");
+                commandParts.add("yarn-application");
+                addYarnConfig(commandParts, envNode);
+                break;
+            default:
+                // Local mode
+                commandParts.add("run");
+                break;
+        }
+        
+        // Add basic parameters
+        int parallelism = configurations.getInt("parallelism", 1);
+        commandParts.add("-p");
+        commandParts.add(String.valueOf(parallelism));
+        
+        // Add main class
+        String mainClass = configurations.getString("mainClass", "io.datavines.engine.flink.core.FlinkDataVinesBootstrap");
+        commandParts.add("-c");
+        commandParts.add(mainClass);
+        
+        // Add main jar
+        String mainJar = configurations.getString("mainJar");
+        if (StringUtils.isEmpty(mainJar)) {
+            mainJar = Paths.get(flinkHome, "lib", "datavines-flink-core.jar").toString();
+            if (!new File(mainJar).exists()) {
+                throw new RuntimeException("Main jar not found at: " + mainJar);
+            }
+        }
+        commandParts.add(mainJar);
+        
+        // Add program arguments if any
+        String programArgs = configurations.getString("programArgs");
+        if (StringUtils.isNotEmpty(programArgs)) {
+            commandParts.add(programArgs);
+        }
+        
+        return String.join(" ", commandParts);
+    }
+
+    private void addYarnConfig(List<String> commandParts, JsonNode envNode) {
+        commandParts.add("-Dyarn.application.name=" + jobExecutionRequest.getJobExecutionName());
+        
+        // Add memory configuration
+        String jobManagerMemory = "1024m";
+        String taskManagerMemory = "1024m";
+        
+        if (envNode != null) {
+            if (envNode.has("jobmanager.memory.process.size")) {
+                jobManagerMemory = envNode.get("jobmanager.memory.process.size").asText("1024m");
+            }
+            if (envNode.has("taskmanager.memory.process.size")) {
+                taskManagerMemory = envNode.get("taskmanager.memory.process.size").asText("1024m");
+            }
+        }
+        
+        commandParts.add("-Djobmanager.memory.process.size=" + jobManagerMemory);
+        commandParts.add("-Dtaskmanager.memory.process.size=" + taskManagerMemory);
+    }
+
+    @Override
+    public void after() {
         try {
             if (shellCommandProcess != null) {
                 ((FlinkCommandProcess)shellCommandProcess).cleanupTempFiles();
             }
         } catch (Exception e) {
             logger.error("Error in after execution", e);
-            // 不抛出异常，避免影响主流程
         }
     }
 
@@ -133,114 +261,6 @@ public class FlinkEngineExecutor extends AbstractYarnEngineExecutor {
     @Override
     public JobExecutionRequest getTaskRequest() {
         return this.jobExecutionRequest;
-    }
-
-    @Override
-    protected String buildCommand() {
-        FlinkParameters parameters = new FlinkParameters();
-        
-        // 从applicationParameter中获取部署模式
-        String deployMode = null;
-        JsonNode envNode = null;
-        try {
-            String applicationParameter = jobExecutionRequest.getApplicationParameter();
-            if (applicationParameter != null) {
-                ObjectMapper mapper = new ObjectMapper();
-                JsonNode jsonNode = mapper.readTree(applicationParameter);
-                envNode = jsonNode.get("env");
-                if (envNode != null && envNode.has("deployMode")) {
-                    deployMode = envNode.get("deployMode").asText();
-                }
-            }
-        } catch (Exception e) {
-            logger.error("Failed to parse applicationParameter", e);
-        }
-        
-        // 如果applicationParameter中没有deployMode，则从configurations中获取
-        if (deployMode == null) {
-            deployMode = configurations.getString("deployMode", "local");  // 默认使用local模式
-        }
-        
-        logger.info("Using deploy mode: {}", deployMode);
-        parameters.setDeployMode(deployMode);
-        
-        // 获取 FLINK_HOME
-        String flinkHome = System.getenv("FLINK_HOME");
-        if (flinkHome == null || flinkHome.trim().isEmpty()) {
-            // 从配置中获取
-            flinkHome = configurations.getString("flink.home");
-            if (flinkHome == null || flinkHome.trim().isEmpty()) {
-                // 使用默认路径
-                flinkHome = "/opt/flink";
-                logger.info("FLINK_HOME not set, using default path: {}", flinkHome);
-            }
-        }
-        
-        // 检查Flink目录是否存在
-        File flinkDir = new File(flinkHome);
-        if (!flinkDir.exists() || !flinkDir.isDirectory()) {
-            logger.warn("Flink directory not found at: {}. Please make sure Flink is properly installed.", flinkHome);
-        }
-        
-        // 构建完整的 Flink 命令路径
-        StringBuilder command = new StringBuilder();
-        command.append(flinkHome);
-        command.append("/bin/").append(FLINK_COMMAND);
-
-        // 根据部署模式添加不同的参数
-        switch (deployMode.toLowerCase()) {
-            case "yarn-session":
-                command.append(" run");
-                command.append(" -t yarn-session"); // 指定运行模式为 yarn-session
-                command.append(" -Dyarn.application.name=").append(jobExecutionRequest.getJobExecutionName());
-                // 添加yarn-session特定的内存配置
-                if (envNode != null) {
-                    String jobManagerMemory = envNode.get("jobmanager.memory.process.size").asText("1024m");
-                    String taskManagerMemory = envNode.get("taskmanager.memory.process.size").asText("1024m");
-                    command.append(" -Djobmanager.memory.process.size=").append(jobManagerMemory);
-                    command.append(" -Dtaskmanager.memory.process.size=").append(taskManagerMemory);
-                }
-                break;
-            case "yarn-per-job":
-                command.append(" run");
-                command.append(" -t yarn-per-job"); // 指定运行模式为 yarn-per-job
-                command.append(" -Dyarn.application.name=").append(jobExecutionRequest.getJobExecutionName());
-                // 添加yarn-per-job特定的内存配置
-                if (envNode != null) {
-                    String jobManagerMemory = envNode.get("jobmanager.memory.process.size").asText("1024m");
-                    String taskManagerMemory = envNode.get("taskmanager.memory.process.size").asText("1024m");
-                    command.append(" -Djobmanager.memory.process.size=").append(jobManagerMemory);
-                    command.append(" -Dtaskmanager.memory.process.size=").append(taskManagerMemory);
-                }
-                break;
-            case "yarn-application":
-                command.append(" run-application");
-                command.append(" -t yarn-application"); // 指定运行模式为 yarn-application
-                command.append(" -Dyarn.application.name=").append(jobExecutionRequest.getJobExecutionName());
-                // 添加yarn-application特定的内存配置
-                if (envNode != null) {
-                    String jobManagerMemory = envNode.get("jobmanager.memory.process.size").asText("1024m");
-                    String taskManagerMemory = envNode.get("taskmanager.memory.process.size").asText("1024m");
-                    command.append(" -Djobmanager.memory.process.size=").append(jobManagerMemory);
-                    command.append(" -Dtaskmanager.memory.process.size=").append(taskManagerMemory);
-                }
-                break;
-            case "local":
-            default:
-                command.append(" run");
-                // 本地模式不需要添加额外的部署模式参数
-                break;
-        }
-
-        // 添加通用参数
-        command.append(" -p 1");  // 设置并行度为1
-        command.append(" -c ").append(configurations.getString("mainClass", "io.datavines.engine.flink.core.FlinkDataVinesBootstrap"));
-        
-        // 添加主jar包
-        String mainJar = configurations.getString("mainJar", flinkHome + "/lib/datavines-flink-core.jar");
-        command.append(" ").append(mainJar);
-
-        return command.toString();
     }
 
     public String getApplicationId() {
@@ -266,69 +286,29 @@ public class FlinkEngineExecutor extends AbstractYarnEngineExecutor {
                                                         jobExecutionRequest.getJobExecutionUniqueId());
 
             if (StringUtils.isNotEmpty(applicationId)) {
-                // sudo -u user command to run command
                 String cmd = String.format("sudo -u %s yarn application -kill %s", 
                                          jobExecutionRequest.getTenantCode(), 
                                          applicationId);
 
-                logger.info("yarn application -kill {}", applicationId);
+                logger.info("Killing yarn application: {}", applicationId);
                 Runtime.getRuntime().exec(cmd);
             }
         } catch (Exception e) {
-            logger.error("kill yarn application failed", e);
+            logger.error("Failed to kill yarn application", e);
         }
     }
 
     @Override
     public void logHandle(List<String> logs) {
-        // 处理日志输出
         if (logs != null && !logs.isEmpty()) {
             for (String log : logs) {
                 logger.info(log);
-                // 可以在这里添加对日志的解析，比如提取applicationId等信息
-                if (log.contains("Job has been submitted with JobID")) {
-                    String jobId = extractJobId(log);
-                    if (jobId != null) {
-                        processResult.setProcessId(Integer.valueOf(jobId));
-                    }
-                }
-                // 尝试从日志中提取Yarn Application ID
-                if (log.contains("Submitted application")) {
-                    String appId = extractYarnAppId(log);
-                    if (appId != null) {
-                        processResult.setApplicationId(appId);
-                    }
-                }
             }
         }
-    }
-
-    private String extractJobId(String log) {
-        // 从日志中提取JobID的简单实现
-        int index = log.indexOf("JobID");
-        if (index != -1) {
-            return log.substring(index).trim();
-        }
-        return null;
-    }
-
-    private String extractYarnAppId(String log) {
-        // 从日志中提取Yarn Application ID的简单实现
-        int index = log.indexOf("application_");
-        if (index != -1) {
-            String appId = log.substring(index);
-            // 提取到第一个空格为止
-            int spaceIndex = appId.indexOf(" ");
-            if (spaceIndex != -1) {
-                appId = appId.substring(0, spaceIndex);
-            }
-            return appId;
-        }
-        return null;
     }
 
     @Override
     public boolean isCancel() {
-        return cancel;
+        return this.cancel;
     }
 }
