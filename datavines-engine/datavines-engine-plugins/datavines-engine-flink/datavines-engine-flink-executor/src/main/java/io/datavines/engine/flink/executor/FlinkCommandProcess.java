@@ -18,25 +18,28 @@ package io.datavines.engine.flink.executor;
 
 import io.datavines.common.config.Configurations;
 import io.datavines.common.entity.JobExecutionRequest;
+import io.datavines.common.entity.ProcessResult;
+import io.datavines.common.enums.ExecutionStatus;
 import io.datavines.common.utils.ProcessUtils;
+import io.datavines.common.utils.YarnUtils;
 import io.datavines.engine.executor.core.executor.BaseCommandProcess;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
+
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Field;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class FlinkCommandProcess extends BaseCommandProcess {
 
-    private static final String SH = "sh";
+    private static final String FLINK_COMMAND = "flink";
+    private long timeout;
 
     public FlinkCommandProcess(Consumer<List<String>> logHandler,
                              Logger logger,
@@ -45,104 +48,144 @@ public class FlinkCommandProcess extends BaseCommandProcess {
         super(logHandler, logger, jobExecutionRequest, configurations);
     }
 
-    @Override
-    protected String buildCommandFilePath() {
-        return String.format("%s/%s.command", jobExecutionRequest.getExecuteFilePath(), jobExecutionRequest.getJobExecutionId());
+    public void setTimeout(long timeout) {
+        this.timeout = timeout;
     }
 
-    @Override
-    protected void createCommandFileIfNotExists(String execCommand, String commandFile) throws IOException {
-        logger.info("tenant {},job dir:{}", jobExecutionRequest.getTenantCode(), jobExecutionRequest.getExecuteFilePath());
-
-        Path commandFilePath = Paths.get(commandFile);
-        // 确保父目录存在
-        Files.createDirectories(commandFilePath.getParent());
-        
-        if(Files.exists(commandFilePath)){
-            Files.delete(commandFilePath);
-        }
-
-        logger.info("create command file:{}",commandFile);
-
-        StringBuilder sb = new StringBuilder();
-        sb.append("#!/bin/sh\n");
-        sb.append("BASEDIR=$(cd `dirname $0`; pwd)\n");
-        sb.append("cd $BASEDIR\n");
-        sb.append("\n");
-        sb.append(execCommand);
-
-        // 设置文件权限为可执行
-        Files.write(commandFilePath, sb.toString().getBytes());
-        commandFilePath.toFile().setExecutable(true, false);
-    }
-
-    @Override
-    protected String commandInterpreter() {
-        return SH;
-    }
-
-    @Override
-    protected List<String> commandOptions() {
-        List<String> options = new LinkedList<>();
-        options.add("-c");
-        return options;
-    }
-
-    public void cleanupTempFiles() {
-        try {
-            String commandFile = buildCommandFilePath();
-            Path commandPath = Paths.get(commandFile);
-            if (Files.exists(commandPath)) {
-                Files.delete(commandPath);
-                logger.info("Cleaned up command file: {}", commandFile);
-            }
-        } catch (IOException e) {
-            logger.warn("Failed to cleanup command file", e);
-        }
-    }
-
-    private void buildProcess(String commandFile) throws IOException {
-        // Create process builder
-        ProcessBuilder processBuilder = buildProcessBuilder(commandFile);
-        // merge error information to standard output stream
-        processBuilder.redirectErrorStream(true);
-
-        // Print command for debugging
-        try {
-            String cmdStr = ProcessUtils.buildCommandStr(processBuilder.command());
-            logger.info("job run command:\n{}", cmdStr);
-        } catch (IOException e) {
-            logger.error(e.getMessage(), e);
-        }
-
-        // Start the process
-        try {
-            Process tempProcess = processBuilder.start();
-            // Use reflection to set the process field in parent class
-            Field processField = BaseCommandProcess.class.getDeclaredField("process");
-            processField.setAccessible(true);
-            processField.set(this, tempProcess);
-        } catch (Exception e) {
-            logger.error("Failed to start or set process: " + e.getMessage(), e);
-            throw new IOException("Failed to start process", e);
-        }
-    }
-
-    private ProcessBuilder buildProcessBuilder(String commandFile) {
+    private ProcessBuilder buildFlinkProcessBuilder(String command) throws IOException {
         List<String> commandList = new ArrayList<>();
         
-        // 直接执行命令，不使用sudo
-        commandList.add(commandInterpreter());
-        commandList.addAll(commandOptions());
-        commandList.add(commandFile);
+        // 将命令拆分为参数列表，保留引号内的空格
+        String[] cmdArray = command.split("\\s+(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)");
+        for (String cmd : cmdArray) {
+            // 移除引号
+            cmd = cmd.replaceAll("^\"|\"$", "");
+            if (!cmd.trim().isEmpty()) {
+                commandList.add(cmd);
+            }
+        }
 
         ProcessBuilder processBuilder = new ProcessBuilder(commandList);
         processBuilder.directory(new File(jobExecutionRequest.getExecuteFilePath()));
         
-        // 添加环境变量
+        // 设置环境变量
         Map<String, String> env = processBuilder.environment();
-        env.put("FLINK_HOME", System.getenv("FLINK_HOME"));
+        String flinkHome = configurations.getString("flink.home", System.getenv("FLINK_HOME"));
+        if (StringUtils.isNotEmpty(flinkHome)) {
+            env.put("FLINK_HOME", flinkHome);
+            // 添加到PATH
+            String path = env.get("PATH");
+            if (path != null) {
+                path = Paths.get(flinkHome, "bin") + File.pathSeparator + path;
+                env.put("PATH", path);
+            }
+        }
         
         return processBuilder;
+    }
+
+    @Override
+    public ProcessResult run(String executeCommand) {
+        if (StringUtils.isEmpty(executeCommand)) {
+            ProcessResult result = new ProcessResult();
+            result.setExitStatusCode(ExecutionStatus.FAILURE.getCode());
+            return result;
+        }
+
+        try {
+            ProcessBuilder processBuilder = buildFlinkProcessBuilder(executeCommand);
+            processBuilder.redirectErrorStream(true);
+            
+            // 打印命令用于调试
+            logger.info("Executing command: {}", String.join(" ", processBuilder.command()));
+            
+            Process process = processBuilder.start();
+            ProcessResult result = new ProcessResult();
+            
+            try {
+                // 启动日志处理线程
+                startLogHandler(process);
+                
+                if (timeout > 0) {
+                    boolean completed = process.waitFor(timeout, TimeUnit.MILLISECONDS);
+                    if (!completed) {
+                        process.destroyForcibly();
+                        throw new IOException("Process timed out after " + timeout + "ms");
+                    }
+                } else {
+                    process.waitFor();
+                }
+                
+                int exitCode = process.exitValue();
+                result.setExitStatusCode(exitCode);
+                
+                // 获取Yarn应用ID（如果有）
+                String appId = YarnUtils.getYarnAppId(jobExecutionRequest.getTenantCode(), 
+                                                    jobExecutionRequest.getJobExecutionUniqueId());
+                if (StringUtils.isNotEmpty(appId)) {
+                    result.setApplicationId(appId);
+                    // 根据Yarn状态确定最终状态
+                    if (exitCode == 0) {
+                        result.setExitStatusCode(YarnUtils.isSuccessOfYarnState(appId) ? 
+                            ExecutionStatus.SUCCESS.getCode() : ExecutionStatus.FAILURE.getCode());
+                    }
+                }
+                
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new RuntimeException("Process was interrupted", e);
+            }
+            
+            return result;
+        } catch (IOException e) {
+            throw new RuntimeException("Error executing process", e);
+        }
+    }
+
+    private void startLogHandler(Process process) {
+        if (getLogHandler() != null) {
+            Thread logThread = new Thread(() -> {
+                try {
+                    ProcessUtils.printProcessOutput(process, getLogHandler());
+                } catch (IOException e) {
+                    logger.error("Error handling process output", e);
+                }
+            });
+            logThread.setDaemon(true);
+            logThread.start();
+        }
+    }
+
+    @Override
+    protected String commandInterpreter() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'commandInterpreter'");
+    }
+
+    @Override
+    protected String buildCommandFilePath() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'buildCommandFilePath'");
+    }
+
+    @Override
+    protected void createCommandFileIfNotExists(String execCommand, String commandFile) throws IOException {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'createCommandFileIfNotExists'");
+    }
+
+    /**
+     * Cleanup any temporary files created during the Flink job execution
+     */
+    public void cleanupTempFiles() {
+        String commandFile = buildCommandFilePath();
+        if (commandFile != null) {
+            File file = new File(commandFile);
+            if (file.exists() && file.isFile()) {
+                if (!file.delete()) {
+                    logger.warn("Failed to delete temporary command file: {}", commandFile);
+                }
+            }
+        }
     }
 }
