@@ -1,8 +1,4 @@
 local_last_30d_avg=io.datavines.metric.expected.plugin.Last30DayAvg
 spark_last_30d_avg=io.datavines.metric.expected.plugin.SparkLast30DayAvg
-<<<<<<< HEAD
 livy_last_30d_avg=io.datavines.metric.expected.plugin.SparkLast30DayAvg
 flink_last_30d_avg=io.datavines.metric.expected.plugin.Last30DayAvg
-=======
-livy_last_30d_avg=io.datavines.metric.expected.plugin.SparkLast30DayAvg
->>>>>>> upstream/dev

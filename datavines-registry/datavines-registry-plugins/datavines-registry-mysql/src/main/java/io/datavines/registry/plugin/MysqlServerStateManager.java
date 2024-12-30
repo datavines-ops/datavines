@@ -176,22 +176,25 @@ public class MysqlServerStateManager {
 
     private ConcurrentHashMap<String, ServerInfo> fetchServers() throws SQLException {
         checkConnection();
-        ConcurrentHashMap<String, ServerInfo> serverMap = new ConcurrentHashMap<>();
         PreparedStatement preparedStatement = connection.prepareStatement("select * from dv_server");
         ResultSet resultSet = preparedStatement.executeQuery();
 
-        while (resultSet.next()) {
-            String host = resultSet.getString("host");
-            Integer port = resultSet.getInt("port");
-            Timestamp createTime = resultSet.getTimestamp("create_time");
-            Timestamp updateTime = resultSet.getTimestamp("update_time");
-            ServerInfo serverInfo = new ServerInfo(host, port, createTime, updateTime);
-            serverMap.put(serverInfo.getAddr(), serverInfo);
+        if (resultSet == null) {
+            preparedStatement.close();
+            return null;
         }
 
+        ConcurrentHashMap<String, ServerInfo> map = new ConcurrentHashMap<>();
+        while (resultSet.next()) {
+            String host = resultSet.getString("host");
+            int port = resultSet.getInt("port");
+            Timestamp updateTime = resultSet.getTimestamp("update_time");
+            Timestamp createTime = resultSet.getTimestamp("create_time");
+            map.put(host + ":" + port, new ServerInfo(host, port, createTime, updateTime));
+        }
         resultSet.close();
         preparedStatement.close();
-        return serverMap;
+        return map;
     }
 
     public List<ServerInfo> getActiveServerList() {
@@ -201,6 +204,7 @@ public class MysqlServerStateManager {
             if (values.length == 2) {
                 activeServerList.add(v);
             }
+
         });
         return activeServerList;
     }
@@ -209,26 +213,32 @@ public class MysqlServerStateManager {
 
         @Override
         public void run() {
-            try {
-                if (Stopper.isRunning()) {
-                    executeUpdate(serverInfo);
+            if (Stopper.isRunning()) {
+                try {
+                    if (isExists(serverInfo)) {
+                        executeUpdate(serverInfo);
+                    } else {
+                        executeInsert(serverInfo);
+                    }
+                } catch (SQLException e) {
+                    log.error("heartbeat error", e);
                 }
-            } catch (SQLException e) {
-                log.error("heartbeat error", e);
             }
         }
     }
+
 
     class ServerChecker implements Runnable {
 
         @Override
         public void run() {
-            try {
-                if (Stopper.isRunning()) {
+
+            if (Stopper.isRunning()) {
+                try {
                     refreshServer();
+                } catch (SQLException e) {
+                    log.error("server check error", e);
                 }
-            } catch (SQLException e) {
-                log.error("server check error", e);
             }
         }
     }
@@ -240,7 +250,7 @@ public class MysqlServerStateManager {
     }
 
     public void close() throws SQLException {
-        if (connection != null) {
+        if (connection != null && !connection.isClosed()) {
             connection.close();
         }
     }
