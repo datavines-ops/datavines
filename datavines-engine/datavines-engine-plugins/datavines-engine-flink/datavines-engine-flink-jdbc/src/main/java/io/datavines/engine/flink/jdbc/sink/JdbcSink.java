@@ -18,26 +18,27 @@ package io.datavines.engine.flink.jdbc.sink;
 
 import org.apache.flink.connector.jdbc.JdbcConnectionOptions;
 import org.apache.flink.connector.jdbc.JdbcExecutionOptions;
+import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.types.Row;
-import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 
 import io.datavines.common.config.Config;
 import io.datavines.common.config.CheckResult;
-import io.datavines.engine.api.plugin.Plugin;
 import io.datavines.engine.api.env.RuntimeEnvironment;
-import io.datavines.engine.api.component.Component;
+import io.datavines.engine.flink.api.FlinkRuntimeEnvironment;
+import io.datavines.engine.flink.api.stream.FlinkStreamSink;
 
-public class JdbcSink implements Plugin, Component {
+public class JdbcSink implements FlinkStreamSink {
     
     private String driverName;
     private String jdbcUrl;
     private String username;
     private String password;
     private String query;
-    private Config config;
-    
-    public SinkFunction<Row> getSink() {
-        return org.apache.flink.connector.jdbc.JdbcSink.sink(
+    private Config config = new Config();
+
+    @Override
+    public void output(DataStream<Row> dataStream, FlinkRuntimeEnvironment environment) {
+        dataStream.addSink(org.apache.flink.connector.jdbc.JdbcSink.sink(
             query,
             (statement, row) -> {
                 // Need to be implemented based on actual schema
@@ -56,37 +57,14 @@ public class JdbcSink implements Plugin, Component {
                 .withUsername(username)
                 .withPassword(password)
                 .build()
-        );
-    }
-
-    public void setDriverName(String driverName) {
-        this.driverName = driverName;
-    }
-
-    public void setJdbcUrl(String jdbcUrl) {
-        this.jdbcUrl = jdbcUrl;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public void setQuery(String query) {
-        this.query = query;
+        ));
     }
 
     @Override
     public void setConfig(Config config) {
-        this.config = config;
-        this.driverName = config.getString("driverName");
-        this.jdbcUrl = config.getString("jdbcUrl");
-        this.username = config.getString("username");
-        this.password = config.getString("password");
-        this.query = config.getString("query");
+        if(config != null) {
+            this.config = config;
+        }
     }
 
     @Override
@@ -96,27 +74,17 @@ public class JdbcSink implements Plugin, Component {
 
     @Override
     public CheckResult checkConfig() {
-        if (driverName == null || driverName.isEmpty()) {
-            return new CheckResult(false, "driverName cannot be empty");
-        }
-        if (jdbcUrl == null || jdbcUrl.isEmpty()) {
-            return new CheckResult(false, "jdbcUrl cannot be empty");
-        }
-        if (username == null || username.isEmpty()) {
-            return new CheckResult(false, "username cannot be empty");
-        }
-        if (password == null || password.isEmpty()) {
-            return new CheckResult(false, "password cannot be empty");
-        }
-        if (query == null || query.isEmpty()) {
-            return new CheckResult(false, "query cannot be empty");
-        }
         return new CheckResult(true, "");
     }
 
     @Override
     public void prepare(RuntimeEnvironment env) throws Exception {
-        // Load JDBC driver
-        Class.forName(driverName);
+        if (config != null) {
+            this.driverName = config.getString("driver");
+            this.jdbcUrl = config.getString("url");
+            this.username = config.getString("username");
+            this.password = config.getString("password");
+            this.query = config.getString("query");
+        }
     }
 }

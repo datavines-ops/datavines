@@ -17,62 +17,74 @@
 package io.datavines.engine.flink.jdbc.source;
 
 import org.apache.flink.connector.jdbc.JdbcInputFormat;
+import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.types.Row;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 import io.datavines.common.config.Config;
 import io.datavines.common.config.CheckResult;
-import io.datavines.engine.api.plugin.Plugin;
+import io.datavines.common.utils.StringUtils;
+import io.datavines.common.utils.TypesafeConfigUtils;
 import io.datavines.engine.api.env.RuntimeEnvironment;
-import io.datavines.engine.api.component.Component;
+import io.datavines.engine.flink.api.FlinkRuntimeEnvironment;
+import io.datavines.engine.flink.api.stream.FlinkStreamSource;
+import static io.datavines.common.ConfigConstants.*;
 
-public class JdbcSource implements Plugin, Component {
+public class JdbcSource implements FlinkStreamSource {
     
-    private String driverName;
-    private String jdbcUrl;
-    private String username;
-    private String password;
-    private String query;
-    private Config config;
+    private Config config = new Config();
     
-    public JdbcInputFormat getSource() {
+    private JdbcInputFormat buildJdbcInputFormat() {
+        Properties properties = new Properties();
+        properties.setProperty(USER, config.getString(USER));
+        properties.setProperty(DRIVER, config.getString(DRIVER));
+        String password = config.getString(PASSWORD);
+        if (!StringUtils.isEmptyOrNullStr(password)) {
+            properties.put(PASSWORD, password);
+        }
+
+        Config jdbcConfig = TypesafeConfigUtils.extractSubConfigThrowable(config, "jdbc.", false);
+        if (!jdbcConfig.isEmpty()) {
+            jdbcConfig.entrySet().forEach(x -> {
+                properties.put(x.getKey(), String.valueOf(x.getValue()));
+            });
+        }
+
         return JdbcInputFormat.buildJdbcInputFormat()
-                .setDrivername(driverName)
-                .setDBUrl(jdbcUrl)
-                .setUsername(username)
-                .setPassword(password)
-                .setQuery(query)
+                .setDrivername(properties.getProperty(DRIVER))
+                .setDBUrl(config.getString(URL))
+                .setUsername(properties.getProperty(USER))
+                .setPassword(properties.getProperty(PASSWORD))
+                .setQuery(config.getString(TABLE))
                 .setRowTypeInfo(null) // Need to be implemented based on actual schema
                 .finish();
     }
 
-    public void setDriverName(String driverName) {
-        this.driverName = driverName;
+    @Override
+    public DataStream<Row> getData(FlinkRuntimeEnvironment environment) {
+        return environment.getEnv()
+                .createInput(buildJdbcInputFormat());
     }
 
-    public void setJdbcUrl(String jdbcUrl) {
-        this.jdbcUrl = jdbcUrl;
+    @Override
+    public String[] getFieldNames() {
+        // TODO: Implement this based on database metadata
+        return new String[0];
     }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public void setQuery(String query) {
-        this.query = query;
+    @Override
+    public Class<?>[] getFieldTypes() {
+        // TODO: Implement this based on database metadata
+        return new Class<?>[0];
     }
 
     @Override
     public void setConfig(Config config) {
-        this.config = config;
-        this.driverName = config.getString("driverName");
-        this.jdbcUrl = config.getString("jdbcUrl");
-        this.username = config.getString("username");
-        this.password = config.getString("password");
-        this.query = config.getString("query");
+        if(config != null) {
+            this.config = config;
+        }
     }
 
     @Override
@@ -82,27 +94,29 @@ public class JdbcSource implements Plugin, Component {
 
     @Override
     public CheckResult checkConfig() {
-        if (driverName == null || driverName.isEmpty()) {
-            return new CheckResult(false, "driverName cannot be empty");
+        List<String> requiredOptions = Arrays.asList(URL, TABLE, USER);
+
+        List<String> nonExistsOptions = new ArrayList<>();
+        requiredOptions.forEach(x->{
+            if(!config.has(x)){
+                nonExistsOptions.add(x);
+            }
+        });
+
+        if (!nonExistsOptions.isEmpty()) {
+            return new CheckResult(
+                    false,
+                    "please specify " + String.join(",", nonExistsOptions.stream()
+                            .map(option -> "[" + option + "]")
+                            .collect(Collectors.toList())) + " as non-empty string");
+        } else {
+            return new CheckResult(true, "");
         }
-        if (jdbcUrl == null || jdbcUrl.isEmpty()) {
-            return new CheckResult(false, "jdbcUrl cannot be empty");
-        }
-        if (username == null || username.isEmpty()) {
-            return new CheckResult(false, "username cannot be empty");
-        }
-        if (password == null || password.isEmpty()) {
-            return new CheckResult(false, "password cannot be empty");
-        }
-        if (query == null || query.isEmpty()) {
-            return new CheckResult(false, "query cannot be empty");
-        }
-        return new CheckResult(true, "");
     }
 
     @Override
     public void prepare(RuntimeEnvironment env) throws Exception {
-        // Load JDBC driver
-        Class.forName(driverName);
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'prepare'");
     }
 }

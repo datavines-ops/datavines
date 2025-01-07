@@ -22,7 +22,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.datavines.common.config.Configurations;
 import io.datavines.common.entity.JobExecutionRequest;
 import io.datavines.common.entity.ProcessResult;
-import io.datavines.common.enums.ExecutionStatus;
+import io.datavines.common.utils.JSONUtils;
 import io.datavines.common.utils.LoggerUtils;
 import io.datavines.common.utils.OSUtils;
 import io.datavines.engine.executor.core.base.AbstractYarnEngineExecutor;
@@ -64,45 +64,14 @@ public class FlinkEngineExecutor extends AbstractYarnEngineExecutor {
 
     @Override
     public void execute() throws Exception {
-        int retryCount = 0;
-        int maxRetries = configurations.getInt("flink.task.max.retries", 3);
-        long retryInterval = configurations.getLong("flink.task.retry.interval", 10000);
-        long timeout = configurations.getLong("flink.task.timeout", 3600000); // 1 hour default
-
-        while (retryCount <= maxRetries) {
-            try {
-                String command = buildCommand();
-                logger.info("flink task command: {}", command);
-                
-                // Set timeout for the process
-                ((FlinkCommandProcess)shellCommandProcess).setTimeout(timeout);
-                processResult = shellCommandProcess.run(command);
-                
-                if (processResult.getExitStatusCode() == ExecutionStatus.SUCCESS.getCode()) {
-                    logger.info("Flink job executed successfully");
-                    return;
-                } else {
-                    String errorMsg = String.format("Flink job execution failed with exit code: %d", processResult.getExitStatusCode());
-                    logger.error(errorMsg);
-                    
-                    if (retryCount < maxRetries) {
-                        logger.info("Retrying... Attempt {} of {}", retryCount + 1, maxRetries);
-                        Thread.sleep(retryInterval);
-                        retryCount++;
-                        continue;
-                    }
-                    throw new RuntimeException(errorMsg);
-                }
-            } catch (Exception e) {
-                logger.error("flink task error", e);
-                if (retryCount < maxRetries) {
-                    logger.info("Retrying... Attempt {} of {}", retryCount + 1, maxRetries);
-                    Thread.sleep(retryInterval);
-                    retryCount++;
-                    continue;
-                }
-                throw e;
-            }
+        try {
+            String command = buildCommand();
+            logger.info("flink task command: {}", command);
+            this.processResult = shellCommandProcess.run(command);
+            logger.info("process result: {}", JSONUtils.toJsonString(this.processResult));
+        } catch (Exception e) {
+            logger.error("yarn process failure", e);
+            throw e;
         }
     }
 
