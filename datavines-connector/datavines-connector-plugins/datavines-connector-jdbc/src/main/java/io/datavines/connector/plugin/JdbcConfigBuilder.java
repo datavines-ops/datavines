@@ -144,7 +144,7 @@ public class JdbcConfigBuilder implements ConfigBuilder {
 
     protected List<PluginParams> getOtherParams(boolean isEn) {
 
-        return null;
+        return new ArrayList<>();
     }
 
 }
