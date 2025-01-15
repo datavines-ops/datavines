@@ -292,6 +292,7 @@ export default {
     job_log_refresh: 'Refresh',
     job_log_download: 'Download',
     job_log_fullScreen: 'FullScreen',
+    dv_task_manager_count: 'Task Manager Count',
 
     error_create_btn: 'Create error data store',
     error_table_store_name: 'Storage Name',
@@ -308,8 +309,9 @@ export default {
     profile_schedule: 'Profile Schedule',
 
     config_title: 'Config Management',
-    config_var_key: 'Config Key',
-    config_var_value: 'Config Value',
+    config_var_key: 'Variable Key',
+    config_var_value: 'Variable Value',
+    config_type: 'Configuration Type',
     create_config: 'Create Config',
 
     token_title: 'Token Management',
@@ -329,4 +331,20 @@ export default {
     next_ten_cron_run_times: 'Next ten cron run times',
     view_future_execute_plan: 'view future execute plan',
     test_send: 'test send',
+
+    dv_deploy_mode: 'Deploy Mode',
+    dv_deploy_mode_required: 'Please select deploy mode',
+    dv_flink_home: 'Flink Home Path',
+    dv_flink_home_required: 'Please enter Flink home path',
+    dv_jobmanager_memory: 'JobManager Memory (MB)',
+    dv_jobmanager_memory_required: 'Please enter JobManager memory size',
+    dv_taskmanager_memory: 'TaskManager Memory (MB)',
+    dv_taskmanager_memory_required: 'Please enter TaskManager memory size',
+    dv_flink_deploy_mode_local: 'Local Mode',
+    dv_flink_deploy_mode_yarn_session: 'Yarn Session Mode',
+    dv_flink_deploy_mode_yarn_per_job: 'Yarn Per-Job Mode',
+    dv_flink_deploy_mode_yarn_application: 'Yarn Application Mode',
+    dv_deploy_mode_cluster: 'Cluster Mode',
+    dv_deploy_mode_yarn: 'Yarn Mode',
+    dv_deploy_mode_local: 'Local Mode'
 };

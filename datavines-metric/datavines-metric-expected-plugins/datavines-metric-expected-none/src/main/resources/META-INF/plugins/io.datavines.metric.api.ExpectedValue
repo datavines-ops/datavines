@@ -1,3 +1,4 @@
 local_none=io.datavines.metric.expected.plugin.None
 spark_none=io.datavines.metric.expected.plugin.SparkNone
 livy_none=io.datavines.metric.expected.plugin.SparkNone
+flink_none=io.datavines.metric.expected.plugin.None

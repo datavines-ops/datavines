@@ -18,13 +18,17 @@ package io.datavines.common.utils;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.BufferedReader;
 
 /**
  *  mainly used to get the start command line of a process
@@ -254,5 +258,44 @@ public class ProcessUtils {
       }
     }
     return false;
+  }
+
+  /**
+   * Print process output to logger
+   * @param process process
+   * @param logHandler log handler consumer
+   * @throws IOException io exception
+   */
+  public static void printProcessOutput(Process process, Consumer<List<String>> logHandler) throws IOException {
+    if (process == null || logHandler == null) {
+      return;
+    }
+
+    try (BufferedReader inReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+         BufferedReader errReader = new BufferedReader(new InputStreamReader(process.getErrorStream()))) {
+            
+      List<String> lines = new ArrayList<>();
+      String line;
+      
+      while ((line = inReader.readLine()) != null) {
+        lines.add(line);
+        if (lines.size() >= 100) { // Buffer size to avoid memory issues
+          logHandler.accept(new ArrayList<>(lines));
+          lines.clear();
+        }
+      }
+      
+      while ((line = errReader.readLine()) != null) {
+        lines.add(line);
+        if (lines.size() >= 100) {
+          logHandler.accept(new ArrayList<>(lines));
+          lines.clear();
+        }
+      }
+      
+      if (!lines.isEmpty()) {
+        logHandler.accept(lines);
+      }
+    }
   }
 }

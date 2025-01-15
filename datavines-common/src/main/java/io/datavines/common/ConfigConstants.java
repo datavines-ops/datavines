@@ -108,7 +108,7 @@ public class ConfigConstants {
     public static final String OUTPUT_TABLE = "output_table";
     public static final String TMP_TABLE = "tmp_table";
     public static final String COLUMN_SEPARATOR = "column_separator";
-    public static final String LINE_SEPERATOR = "line_separator";
+    public static final String LINE_SEPARATOR = "line_separator";
     public static final String DATA_DIR = "data_dir";
 
     public static final String ENABLE_SPARK_HIVE_SUPPORT = "enable_spark_hive_support";
@@ -169,4 +169,8 @@ public class ConfigConstants {
     public static final String SAVE_MODE = "save_mode";
 
     public static final String UPSERT = "Upsert";
+
+    public static final String FILE_NAME = "file_name";
+
+    public static final String FLINK = "flink";
 }

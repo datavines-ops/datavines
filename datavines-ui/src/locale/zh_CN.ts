@@ -297,6 +297,9 @@ export default {
     error_title: '存储管理',
 
     user_title: '用户管理',
+
+    dv_task_manager_count: 'Task Manager数量',
+
     label_title: '标签分类',
     label_list: '标签列表',
     label_add_category: '新增标签分类',
@@ -306,8 +309,9 @@ export default {
     profile_schedule: '数据概览调度配置',
 
     config_title: '参数管理',
-    config_var_key: '参数名',
-    config_var_value: '参数值',
+    config_var_key: '变量键',
+    config_var_value: '变量值',
+    config_type: '配置类型',
     create_config: '创建参数',
 
     token_title: '令牌管理',
@@ -327,4 +331,20 @@ export default {
     next_ten_cron_run_times: '未来十次执行时间',
     view_future_execute_plan: '查看未来执行计划',
     test_send: '测试发送',
+
+    dv_deploy_mode: '部署模式',
+    dv_deploy_mode_required: '请选择部署模式',
+    dv_flink_home: 'Flink安装路径',
+    dv_flink_home_required: '请输入Flink安装路径',
+    dv_jobmanager_memory: 'JobManager内存 (MB)',
+    dv_jobmanager_memory_required: '请输入JobManager内存大小',
+    dv_taskmanager_memory: 'TaskManager内存 (MB)',
+    dv_taskmanager_memory_required: '请输入TaskManager内存大小',
+    dv_flink_deploy_mode_local: '本地模式',
+    dv_flink_deploy_mode_yarn_session: 'Yarn Session模式',
+    dv_flink_deploy_mode_yarn_per_job: 'Yarn Per-Job模式',
+    dv_flink_deploy_mode_yarn_application: 'Yarn Application模式',
+    dv_deploy_mode_cluster: '集群模式',
+    dv_deploy_mode_yarn: 'Yarn模式',
+    dv_deploy_mode_local: '本地模式'
 };
